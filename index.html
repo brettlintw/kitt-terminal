@@ -3,103 +3,147 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>K.I.T.T. 2026 - ONLINE TERMINAL</title>
+    <title>K.I.T.T. MOBILE HUD V7.1</title>
     <style>
-        body, html { margin: 0; padding: 0; background: #000; height: 100%; overflow: hidden; font-family: 'Courier New', monospace; }
+        /* 1. 核心視覺層 (CSS 修復協議) */
+        body, html { margin: 0; padding: 0; background: #000; overflow: hidden; font-family: 'Courier New', monospace; height: 100%; }
         
         #kitt-terminal {
             width: 100vw; height: 100vh;
-            /* 視覺系統：請在此貼上您的 Base64 編碼 */
-            background-image: url('PASTE_YOUR_BASE64_HERE'); 
-            background-size: cover; background-position: center;
-            position: relative; display: none;
+            /* 背景機艙照片 (自動適配手機垂直螢幕) */
+            background-image: url('image_12.jpg'); 
+            background-size: cover; /* 強制覆蓋全螢幕 */
+            background-position: center; /* 確保方向盤在中央 */
+            position: relative; display: none; /* 驗證前隱藏 */
         }
 
-        /* 數據窗格：自動適配電腦與手機 */
+        /* 2. 行動端數據窗格 (UI 最佳化) */
         .hud-screen {
             position: absolute; border: 1px solid rgba(255, 0, 0, 0.4);
-            background: rgba(0, 0, 0, 0.85); padding: 10px; color: #0f0; 
-            box-shadow: inset 0 0 20px #000; overflow-y: auto;
+            background: rgba(0, 0, 0, 0.85); padding: 12px; color: #0f0; 
+            box-shadow: inset 0 0 20px #000; overflow-y: auto; z-index: 5;
         }
         
+        /* 聖經勉勵牆 (置頂中央) */
+        #chronometer {
+            position: absolute; top: 3%; left: 50%; transform: translateX(-50%);
+            width: 85%; text-align: center; color: #f00;
+            background: rgba(0,0,0,0.85); border: 1px solid #444; padding: 8px;
+            box-shadow: 0 0 15px red; z-index: 10;
+        }
+
+        /* [重要] 手機直式排版最佳化 (portrait) */
         @media (orientation: portrait) {
-            #intel-hub { top: 10%; left: 5%; width: 90%; height: 18%; font-size: 3.5vw; }
-            #weather-hub { top: 30%; left: 5%; width: 90%; height: 15%; font-size: 3.5vw; }
-            #tactic-log { top: 47%; left: 5%; width: 90%; height: 25%; font-size: 3.5vw; color: #f33; }
+            /* 合併情報與大氣 (置中偏上) */
+            #intel-wall { top: 12%; left: 5%; width: 90%; height: 35%; font-size: 3.8vw; }
+            /* 戰術日誌移至底部 */
+            #tactic-log { bottom: 12%; left: 5%; width: 90%; height: 25%; color: #f33; font-size: 3.5vw; }
+            /* Voice Box 移至情報牆下方 */
+            #voice-box { top: 48%; left: 50%; transform: translateX(-50%); height: 45px; }
+            /* 任務按鈕移至 Voice Box 下方 */
+            #talk-btn { top: 56%; left: 50%; transform: translateX(-50%); width: 60px; height: 60px; }
+            /* 底部指令輸入框 (適配鍵盤) */
+            #cmd-box { bottom: 3%; left: 50%; transform: translateX(-50%); width: 90%; display: flex; z-index: 20; }
         }
 
-        @media (orientation: landscape) {
-            #intel-hub { top: 18%; left: 14%; width: 20%; height: 38%; font-size: 1vw; }
-            #weather-hub { top: 18%; left: 39%; width: 16%; height: 38%; font-size: 1vw; }
-            #tactic-log { top: 60%; right: 14%; width: 22%; height: 26%; font-size: 0.9vw; color: #f33; }
-        }
-
-        #chronometer { position: absolute; top: 5%; left: 50%; transform: translateX(-50%); text-align: center; color: #f00; background: rgba(0,0,0,0.8); border: 1px solid #444; padding: 5px; box-shadow: 0 0 15px red; min-width: 280px; z-index: 10; }
-        #voice-box { position: absolute; top: 30%; left: 45.3%; display: flex; gap: 4px; align-items: flex-end; height: 50px; }
+        /* Voice Box 能量條 */
+        #voice-box { position: absolute; display: flex; gap: 4px; align-items: flex-end; }
         .v-bar { width: 12px; border-radius: 2px; transition: height 0.1s; }
         .red { background: #f00; box-shadow: 0 0 10px #f00; }
         .orange { background: #f90; box-shadow: 0 0 10px #f90; }
         .yellow { background: #ff0; box-shadow: 0 0 10px #ff0; }
+
+        /* 交互按鈕 */
+        #talk-btn {
+            position: absolute; border-radius: 50%;
+            background: rgba(255, 0, 0, 0.15); border: 2px solid red;
+            color: red; cursor: pointer; display: none;
+            box-shadow: 0 0 15px red; font-size: 26px; z-index: 15;
+        }
+
+        #cmd-input { flex-grow: 1; background: #000; border: 1px solid red; color: #0f0; padding: 12px; font-size: 16px; outline: none; }
+        
+        #scanner { position: absolute; bottom: 0; width: 100%; height: 10px; background: #000; border-top: 1px solid #300; overflow:hidden; }
+        #scanner-light { position: absolute; width: 18%; height: 100%; background: radial-gradient(circle, red, transparent); box-shadow: 0 0 15px red; animation: scan 2.2s infinite linear; }
+        @keyframes scan { 0% { left: -20%; } 50% { left: 100%; } 100% { left: -20%; } }
         
         #auth-mask { position: fixed; inset: 0; background: #000; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; color: red; }
-        input { background: #111; border: 1px solid red; color: white; padding: 15px; text-align: center; font-size: 24px; width: 200px; margin-bottom: 20px; }
-        button { background: red; color: white; border: none; padding: 10px 40px; cursor: pointer; font-weight: bold; font-size: 18px; }
     </style>
 </head>
 <body>
 
 <div id="auth-mask">
-    <h1>K.I.T.T. ONLINE AUTHORIZATION</h1>
-    <input type="password" id="passcode" placeholder="CODE">
-    <button onclick="authenticate()">BOOT SYSTEM</button>
+    <h1>K.I.T.T. MOBILE HUD</h1>
+    <input type="password" id="passcode" pattern="\d*" inputmode="numeric" style="background:#111; border:1px solid red; color:white; padding:15px; width: 220px; font-size: 24px; text-align: center;" placeholder="CODE">
+    <button onclick="authenticate()" style="margin-top:20px; background:red; color:white; border:none; padding:12px 30px; cursor:pointer; font-weight: bold; border-radius: 5px;">BOOT SYSTEM</button>
 </div>
 
 <div id="kitt-terminal">
     <div id="chronometer">
-        <div id="date-ui">2026年03月20日</div>
-        <div id="time-ui" style="font-size: 24px; font-weight: bold;">00:00:00</div>
+        <div id="date-ui" style="font-size: 12px;">2026-03-20</div>
+        <div id="time-ui" style="font-size: 22px; font-weight: bold;">00:00:00</div>
     </div>
-    <div id="intel-hub" class="hud-screen"><b>[ REGIONAL INTEL ]</b><br>台積電: 1215 ▲<br>網路狀態: 雲端連線穩定</div>
-    <div id="weather-hub" class="hud-screen"><b>[ WEATHER SCAN ]</b><br><div id="w-data">抓取衛星數據...</div></div>
-    <div id="tactic-log" class="hud-screen"><b>[ TACTICAL LOG ]</b><br><div id="log-text">>> 系統待命</div></div>
+
+    <div id="intel-wall" class="hud-screen">
+        <b style="color:red">[ REGIONAL INTEL ]</b><br>
+        台積電: 1215 ▲<br>
+        Market: Stable<br><br>
+        <b style="color:yellow">[ WEATHER SCAN ]</b><br>
+        新北市三峽區<br>
+        溫度: 22°C | 風速: 10km/h
+    </div>
+    
+    <div id="tactic-log" class="hud-screen">
+        <b style="color:#eee">[ TACTICAL LOG ]</b><br>
+        <div id="log-content">>> 系統待命</div>
+    </div>
+    
     <div id="voice-box">
         <div class="v-bar red" id="b1" style="height:20px;"></div>
         <div class="v-bar orange" id="b2" style="height:40px;"></div>
         <div class="v-bar yellow" id="b3" style="height:20px;"></div>
     </div>
-    <div style="position:absolute; bottom:0; width:100%; height:10px; background:#000; border-top:1px solid #300; overflow:hidden;">
-        <div style="position:absolute; width:18%; height:100%; background:radial-gradient(circle, red, transparent); box-shadow:0 0 15px red; animation:scan 2.2s infinite linear;"></div>
+    
+    <button id="talk-btn" onclick="startDialogue()">🎤</button>
+    <div id="scanner"><div id="scanner-light"></div></div>
+    
+    <div id="cmd-box">
+        <input type="text" id="cmd-input" placeholder="對我說點什麼，Brett..." onkeypress="if(event.key==='Enter') processInput()">
     </div>
-    <style>@keyframes scan { 0% { left: -20%; } 50% { left: 100%; } 100% { left: -20%; } }</style>
 </div>
 
 <script>
-    async function fetchWeather() {
-        try {
-            const res = await fetch("https://api.open-meteo.com/v1/forecast?latitude=24.93&longitude=121.37&current_weather=true");
-            const data = await res.json();
-            document.getElementById('w-data').innerHTML = `三峽區: ${data.current_weather.temperature}°C`;
-        } catch(e) { document.getElementById('w-data').innerHTML = "大氣感應器離線"; }
-    }
-
     function authenticate() {
         if(document.getElementById('passcode').value === '666') {
             document.getElementById('auth-mask').style.display = 'none';
             document.getElementById('kitt-terminal').style.display = 'block';
-            fetchWeather();
-            setInterval(() => {
-                const now = new Date();
-                document.getElementById('time-ui').innerText = now.toTimeString().split(' ')[0];
-            }, 1000);
-            speak("Online system active. Hello Brett.");
+            document.getElementById('talk-btn').style.display = 'block';
+            startDialogue();
+            setInterval(updateClock, 1000);
+            speak("Independent mobile system active. Hello Brett.");
         } else { alert("ACCESS DENIED"); }
     }
 
-    function speak(t) {
+    function updateClock() {
+        const now = new Date();
+        document.getElementById('date-ui').innerText = now.toLocaleDateString('zh-TW', { year: 'numeric', month: 'long', day: 'numeric' });
+        document.getElementById('time-ui').innerText = now.toTimeString().split(' ')[0];
+    }
+
+    function startDialogue() {
+        const verses = [
+            "Hello Brett. My core is functioning. Today's guidance: I can do all things through Christ which strengtheneth me.",
+            "Authorization confirmed. Brett. Let us begin. Today's guidance: The Lord is my shepherd; I shall not want.",
+            "Fear thou not; for I am with thee."
+        ];
+        speak(verses[Math.floor(Math.random() * verses.length)]);
+    }
+
+    function speak(text) {
         window.speechSynthesis.cancel();
-        const m = new SpeechSynthesisUtterance(t);
-        m.lang = 'zh-TW'; m.pitch = 0.8;
-        window.speechSynthesis.speak(m);
+        const msg = new SpeechSynthesisUtterance(text);
+        msg.lang = 'en-US'; msg.pitch = 0.8;
+        window.speechSynthesis.speak(msg);
         animateVoice();
     }
 
@@ -109,8 +153,19 @@
             document.getElementById('b1').style.height = Math.random()*30+10+'px';
             document.getElementById('b2').style.height = Math.random()*35+15+'px';
             document.getElementById('b3').style.height = Math.random()*30+10+'px';
-            if(++c > 40) clearInterval(i);
+            if(++c > 40) { clearInterval(i); resetVoice(); }
         }, 100);
+    }
+    function resetVoice() { document.getElementById('b1').style.height='20px'; document.getElementById('b2').style.height='40px'; document.getElementById('b3').style.height='20px'; }
+
+    function processInput() {
+        const input = document.getElementById('cmd-input').value;
+        if(!input) return;
+        const log = document.getElementById('log-content');
+        log.innerHTML += `<div>> ${input}</div>`;
+        speak("Command received, processing data: " + input);
+        document.getElementById('cmd-input').value = "";
+        log.parentElement.scrollTop = log.parentElement.scrollHeight;
     }
 </script>
 </body>
