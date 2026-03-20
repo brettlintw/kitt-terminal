@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>K.I.T.T. 2026 - ONLINE TERMINAL</title>
+    <style>
+        body, html { margin: 0; padding: 0; background: #000; height: 100%; overflow: hidden; font-family: 'Courier New', monospace; }
+        
+        #kitt-terminal {
+            width: 100vw; height: 100vh;
+            /* 視覺系統：請在此貼上您的 Base64 編碼 */
+            background-image: url('PASTE_YOUR_BASE64_HERE'); 
+            background-size: cover; background-position: center;
+            position: relative; display: none;
+        }
+
+        /* 數據窗格：自動適配電腦與手機 */
+        .hud-screen {
+            position: absolute; border: 1px solid rgba(255, 0, 0, 0.4);
+            background: rgba(0, 0, 0, 0.85); padding: 10px; color: #0f0; 
+            box-shadow: inset 0 0 20px #000; overflow-y: auto;
+        }
+        
+        @media (orientation: portrait) {
+            #intel-hub { top: 10%; left: 5%; width: 90%; height: 18%; font-size: 3.5vw; }
+            #weather-hub { top: 30%; left: 5%; width: 90%; height: 15%; font-size: 3.5vw; }
+            #tactic-log { top: 47%; left: 5%; width: 90%; height: 25%; font-size: 3.5vw; color: #f33; }
+        }
+
+        @media (orientation: landscape) {
+            #intel-hub { top: 18%; left: 14%; width: 20%; height: 38%; font-size: 1vw; }
+            #weather-hub { top: 18%; left: 39%; width: 16%; height: 38%; font-size: 1vw; }
+            #tactic-log { top: 60%; right: 14%; width: 22%; height: 26%; font-size: 0.9vw; color: #f33; }
+        }
+
+        #chronometer { position: absolute; top: 5%; left: 50%; transform: translateX(-50%); text-align: center; color: #f00; background: rgba(0,0,0,0.8); border: 1px solid #444; padding: 5px; box-shadow: 0 0 15px red; min-width: 280px; z-index: 10; }
+        #voice-box { position: absolute; top: 30%; left: 45.3%; display: flex; gap: 4px; align-items: flex-end; height: 50px; }
+        .v-bar { width: 12px; border-radius: 2px; transition: height 0.1s; }
+        .red { background: #f00; box-shadow: 0 0 10px #f00; }
+        .orange { background: #f90; box-shadow: 0 0 10px #f90; }
+        .yellow { background: #ff0; box-shadow: 0 0 10px #ff0; }
+        
+        #auth-mask { position: fixed; inset: 0; background: #000; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; color: red; }
+        input { background: #111; border: 1px solid red; color: white; padding: 15px; text-align: center; font-size: 24px; width: 200px; margin-bottom: 20px; }
+        button { background: red; color: white; border: none; padding: 10px 40px; cursor: pointer; font-weight: bold; font-size: 18px; }
+    </style>
+</head>
+<body>
+
+<div id="auth-mask">
+    <h1>K.I.T.T. ONLINE AUTHORIZATION</h1>
+    <input type="password" id="passcode" placeholder="CODE">
+    <button onclick="authenticate()">BOOT SYSTEM</button>
+</div>
+
+<div id="kitt-terminal">
+    <div id="chronometer">
+        <div id="date-ui">2026年03月20日</div>
+        <div id="time-ui" style="font-size: 24px; font-weight: bold;">00:00:00</div>
+    </div>
+    <div id="intel-hub" class="hud-screen"><b>[ REGIONAL INTEL ]</b><br>台積電: 1215 ▲<br>網路狀態: 雲端連線穩定</div>
+    <div id="weather-hub" class="hud-screen"><b>[ WEATHER SCAN ]</b><br><div id="w-data">抓取衛星數據...</div></div>
+    <div id="tactic-log" class="hud-screen"><b>[ TACTICAL LOG ]</b><br><div id="log-text">>> 系統待命</div></div>
+    <div id="voice-box">
+        <div class="v-bar red" id="b1" style="height:20px;"></div>
+        <div class="v-bar orange" id="b2" style="height:40px;"></div>
+        <div class="v-bar yellow" id="b3" style="height:20px;"></div>
+    </div>
+    <div style="position:absolute; bottom:0; width:100%; height:10px; background:#000; border-top:1px solid #300; overflow:hidden;">
+        <div style="position:absolute; width:18%; height:100%; background:radial-gradient(circle, red, transparent); box-shadow:0 0 15px red; animation:scan 2.2s infinite linear;"></div>
+    </div>
+    <style>@keyframes scan { 0% { left: -20%; } 50% { left: 100%; } 100% { left: -20%; } }</style>
+</div>
+
+<script>
+    async function fetchWeather() {
+        try {
+            const res = await fetch("https://api.open-meteo.com/v1/forecast?latitude=24.93&longitude=121.37&current_weather=true");
+            const data = await res.json();
+            document.getElementById('w-data').innerHTML = `三峽區: ${data.current_weather.temperature}°C`;
+        } catch(e) { document.getElementById('w-data').innerHTML = "大氣感應器離線"; }
+    }
+
+    function authenticate() {
+        if(document.getElementById('passcode').value === '666') {
+            document.getElementById('auth-mask').style.display = 'none';
+            document.getElementById('kitt-terminal').style.display = 'block';
+            fetchWeather();
+            setInterval(() => {
+                const now = new Date();
+                document.getElementById('time-ui').innerText = now.toTimeString().split(' ')[0];
+            }, 1000);
+            speak("Online system active. Hello Brett.");
+        } else { alert("ACCESS DENIED"); }
+    }
+
+    function speak(t) {
+        window.speechSynthesis.cancel();
+        const m = new SpeechSynthesisUtterance(t);
+        m.lang = 'zh-TW'; m.pitch = 0.8;
+        window.speechSynthesis.speak(m);
+        animateVoice();
+    }
+
+    function animateVoice() {
+        let c = 0;
+        const i = setInterval(() => {
+            document.getElementById('b1').style.height = Math.random()*30+10+'px';
+            document.getElementById('b2').style.height = Math.random()*35+15+'px';
+            document.getElementById('b3').style.height = Math.random()*30+10+'px';
+            if(++c > 40) clearInterval(i);
+        }, 100);
+    }
+</script>
+</body>
+</html>
