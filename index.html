@@ -2,28 +2,25 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <title>K.I.T.T. 2026 - CLASSIC V26.7</title>
+    <title>K.I.T.T. 2026 - UNLOCKED V26.8</title>
     <style>
-        :root { --primary: #f00; --panel-bg: rgba(20, 0, 0, 0.9); --glass: blur(10px); }
+        :root { --primary: #f00; --panel-bg: rgba(15, 0, 0, 0.95); --glass: blur(8px); }
         body, html { margin: 0; padding: 0; background: #000; color: var(--primary); font-family: 'Courier New', monospace; height: 100vh; overflow: hidden; }
-        #bg-layer { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-image: url('image_12.jpg'); background-size: cover; opacity: 0.3; z-index: -1; }
+        #bg-layer { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: radial-gradient(circle, #200 0%, #000 70%); z-index: -1; }
         .main-frame { position: relative; z-index: 10; height: 100vh; display: flex; flex-direction: column; padding: 15px; box-sizing: border-box; }
 
         .hud-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; height: 75%; }
-        .hud-window { border: 1px solid rgba(255, 0, 0, 0.4); background: var(--panel-bg); backdrop-filter: var(--glass); border-radius: 8px; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 0 15px rgba(255,0,0,0.2); }
-        .window-title { background: linear-gradient(90deg, #f00, #400); color: #fff; font-size: 0.7rem; padding: 5px 10px; font-weight: bold; letter-spacing: 2px; }
+        .hud-window { border: 1px solid rgba(255, 0, 0, 0.5); background: var(--panel-bg); border-radius: 8px; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 0 20px rgba(255,0,0,0.1); }
+        .window-title { background: #f00; color: #000; font-size: 0.75rem; padding: 5px 10px; font-weight: bold; letter-spacing: 2px; }
         .window-content { flex-grow: 1; position: relative; background: #000; }
 
-        /* 視頻控制區：確保輸入框與按鈕清晰 */
-        .video-control { padding: 8px; background: rgba(80, 0, 0, 0.5); display: flex; gap: 8px; border-bottom: 1px solid #500; }
-        .video-control input { flex-grow: 1; background: #111; border: 1px solid #f00; color: #f00; padding: 6px; font-family: inherit; font-size: 0.8rem; outline: none; }
-        .video-control button { background: #f00; color: #000; border: none; padding: 6px 15px; cursor: pointer; font-weight: bold; transition: 0.2s; }
-        .video-control button:hover { background: #fff; }
+        .video-control { padding: 8px; background: #200; display: flex; gap: 8px; border-bottom: 1px solid #f00; }
+        .video-control input { flex-grow: 1; background: #000; border: 1px solid #f00; color: #f00; padding: 6px; font-family: inherit; font-size: 0.8rem; }
+        .video-control button { background: #f00; color: #000; border: none; padding: 6px 15px; cursor: pointer; font-weight: bold; }
 
-        /* 下方 1/3 拖尾掃描儀 */
-        .scanner-unit { width: 33.3vw; height: 35px; background: #000; margin: 10px auto; border: 1px solid #333; position: relative; overflow: hidden; border-radius: 4px; box-shadow: 0 0 20px #f00; }
-        .scanner-bar { position: absolute; width: 100px; height: 100%; background: linear-gradient(90deg, transparent, #f00, #ffbbbb, #f00, transparent); box-shadow: 0 0 35px #f00; animation: scan-trail 2.5s infinite ease-in-out; filter: blur(1px); }
-        @keyframes scan-trail { 0% { left: -100px; } 50% { left: 100%; } 100% { left: -100px; } }
+        .scanner-unit { width: 33.3vw; height: 35px; background: #000; margin: 10px auto; border: 1px solid #333; position: relative; overflow: hidden; box-shadow: 0 0 15px #f00; }
+        .scanner-bar { position: absolute; width: 100px; height: 100%; background: linear-gradient(90deg, transparent, #f00, #ff8888, #f00, transparent); animation: scan 2.5s infinite ease-in-out; }
+        @keyframes scan { 0%, 100% { left: -100px; } 50% { left: 100%; } }
 
         #boot-btn { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); padding: 25px 60px; background: #f00; color: #000; font-weight: bold; border: 4px solid #fff; cursor: pointer; z-index: 9999; font-size: 1.6rem; box-shadow: 0 0 50px #f00; }
     </style>
@@ -33,56 +30,50 @@
     <button id="boot-btn" onclick="bootSystem()">ACTIVATE K.I.T.T.</button>
 
     <div class="main-frame" id="main-ui" style="display: none;">
-        <header style="text-align: center; letter-spacing: 12px; font-size: 1.2rem; margin-bottom:10px; color: #fff; text-shadow: 0 0 10px #f00;">K.I.T.T. MISSION TERMINAL V26.7</header>
+        <header style="text-align: center; letter-spacing: 12px; font-size: 1.2rem; margin-bottom:10px; text-shadow: 0 0 10px #f00;">K.I.T.T. MISSION TERMINAL V26.8</header>
 
         <div class="hud-grid">
             <div class="hud-window">
-                <div class="window-title">GPS SECTOR (SANXIA)</div>
-                <div class="window-content"><iframe id="map-frame" src="" style="width:100%; height:100%; border:none; filter: invert(1) hue-rotate(150deg) contrast(1.2);"></iframe></div>
+                <div class="window-title">GPS SECTOR (OPEN STREET MAP - SANXIA)</div>
+                <div class="window-content">
+                    <iframe id="map-frame" width="100%" height="100%" frameborder="0" scrolling="no" marginheight="0" marginwidth="0" src="https://www.openstreetmap.org/export/embed.html?bbox=121.34,24.91,121.40,24.95&layer=mapnik" style="filter: invert(1) hue-rotate(150deg) contrast(1.5);"></iframe>
+                </div>
             </div>
             <div class="hud-window">
                 <div class="window-title">TACTICAL VIDEO LINK</div>
                 <div class="video-control">
-                    <input type="text" id="yt-url" placeholder="Paste YouTube Link Here...">
+                    <input type="text" id="yt-url" placeholder="Paste YouTube Link...">
                     <button onclick="updateVideo()">CONNECT</button>
                 </div>
                 <div id="video-container" class="window-content">
-                    <iframe id="video-frame" width="100%" height="100%" src="https://www.youtube.com/embed/oNyXYPhnUIs?autoplay=1&mute=0" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+                    <iframe id="video-frame" width="100%" height="100%" src="https://www.youtube.com/embed/oNyXYPhnUIs" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
                 </div>
             </div>
         </div>
 
         <div class="scanner-unit"><div class="scanner-bar"></div></div>
-        <div id="sys-log" style="border: 1px solid #f00; height: 80px; padding: 10px; font-size: 0.8rem; background: rgba(0,0,0,0.8); overflow-y: auto; color: #fff;">>> 系統狀態：待命</div>
+        <div id="sys-log" style="border: 1px solid #f00; height: 80px; padding: 10px; font-size: 0.8rem; background: rgba(0,0,0,0.8); overflow-y: auto;">>> 系統狀態：待命</div>
     </div>
 
     <script>
         function bootSystem() {
             document.getElementById('boot-btn').style.display = 'none';
             document.getElementById('main-ui').style.display = 'flex';
-            document.getElementById('map-frame').src = "http://googleusercontent.com/maps.google.com/9";
-            
-            const utter = new SpeechSynthesisUtterance("Welcome back, Brett. Knight Rider mode activated. Video link is now showing classic opening. Scanner is operational.");
+            const utter = new SpeechSynthesisUtterance("System online, Brett. Map and video links re-established.");
             utter.lang = 'en-US';
             window.speechSynthesis.speak(utter);
-            addLog("授權通過。歡迎回來，Brett。");
+            addLog("授權通過。所有通訊頻率已解鎖。");
         }
 
         function updateVideo() {
             const url = document.getElementById('yt-url').value.trim();
             let videoId = "";
-            
             if (url.includes("v=")) videoId = url.split("v=")[1].split("&")[0];
             else if (url.includes("youtu.be/")) videoId = url.split("youtu.be/")[1].split("?")[0];
-            else if (url.includes("embed/")) videoId = url.split("embed/")[1].split("?")[0];
 
             if (videoId) {
-                // 強制清空並重建 iframe，確保載入
-                const container = document.getElementById('video-container');
-                container.innerHTML = `<iframe id="video-frame" width="100%" height="100%" src="https://www.youtube.com/embed/${videoId}?autoplay=1" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>`;
-                addLog(`影像鏈路已切換至頻道 ID: ${videoId}`);
-            } else if (url !== "") {
-                alert("無效的 YouTube 鏈結，Brett。請檢查網址格式。");
+                document.getElementById('video-container').innerHTML = `<iframe id="video-frame" width="100%" height="100%" src="https://www.youtube.com/embed/${videoId}?autoplay=1" frameborder="0" allowfullscreen></iframe>`;
+                addLog(`連結成功：${videoId}`);
             }
         }
 
