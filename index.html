@@ -2,120 +2,79 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>K.I.T.T. 2026 - RESTORED V21.5</title>
+    <title>K.I.T.T. 2026 - VOICE BOX V23.0</title>
     <style>
-        :root { --primary: #f00; --panel-bg: rgba(20, 0, 0, 0.9); }
+        :root { --primary: #f00; --panel-bg: rgba(20, 0, 0, 0.95); }
         body, html { margin: 0; padding: 0; background: #000; color: var(--primary); font-family: 'Courier New', monospace; height: 100vh; overflow: hidden; }
+        #bg-layer { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-image: url('image_12.jpg'); background-size: cover; background-position: center; opacity: 0.5; z-index: -1; }
+        .main-frame { position: relative; z-index: 10; height: 100vh; display: flex; flex-direction: column; padding: 20px; box-sizing: border-box; justify-content: space-between; }
         
-        /* 背景層：確保在最底層 */
-        #bg-layer {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background-image: url('image_12.jpg');
-            background-size: cover; background-position: center;
-            opacity: 0.5; z-index: -1; 
-        }
-
-        .main-frame { 
-            position: relative; z-index: 10; height: 100vh; 
-            display: flex; flex-direction: column; padding: 20px; box-sizing: border-box;
-        }
-
-        /* 頂部 HUD 資訊 */
-        .hud-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; flex-grow: 1; }
-        .hud-window { border: 1px solid var(--primary); background: var(--panel-bg); border-radius: 5px; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 0 15px #000; }
-        .window-title { background: var(--primary); color: #000; font-size: 0.8rem; padding: 5px 10px; font-weight: bold; }
-        .window-content { flex-grow: 1; padding: 15px; }
-
-        .time-text { font-size: 2.5rem; font-weight: bold; color: #fff; text-shadow: 0 0 10px #f00; }
-        iframe { width: 100%; height: 100%; border: none; background: #111; }
-
-        /* 底部日誌與掃描儀 */
-        .bottom-section { margin-top: 20px; }
-        .status-log { border: 1px solid var(--primary); background: var(--panel-bg); height: 80px; padding: 10px; font-size: 0.8rem; overflow-y: auto; margin-bottom: 10px; }
+        /* 1. 安全驗證介面 (Key Access) */
+        #security-mask { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 1000; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        #key-input { background: #111; border: 2px solid #500; color: var(--primary); font-size: 1.5rem; padding: 10px; text-align: center; text-transform: uppercase; }
         
-        /* LED 掃描儀 */
-        .scanner-container { height: 40px; border: 2px solid #333; background: #000; display: flex; align-items: center; justify-content: center; }
-        .led-array { display: flex; gap: 6px; }
-        .led { width: 20px; height: 20px; background-color: #200; border-radius: 2px; transition: background-color 0.2s; }
-        .led.active { background-color: #f00; box-shadow: 0 0 20px 5px #f00; transition: 0s; }
-        .led.fade { background-color: #700; box-shadow: 0 0 10px 2px #f00; }
-
-        /* 啟動按鈕 */
-        #boot-btn { 
-            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            padding: 20px 40px; background: #f00; color: #000; font-weight: bold; 
-            border: none; cursor: pointer; z-index: 100; font-size: 1.5rem;
+        /* 2. 經典語音箱 (Voice Box) */
+        .voice-box-container { 
+            width: 33.3vw; min-width: 300px; height: 120px; 
+            background: #000; display: flex; align-items: center; justify-content: center; 
+            margin: 20px auto; box-shadow: 0 0 20px rgba(255, 0, 0, 0.3);
+            border-radius: 5px; z-index: 100; gap: 10px;
         }
+        .voice-line { width: 12px; height: 50%; background-color: #300; border-radius: 2px; transition: all 0.05s ease-out; box-shadow: 0 0 5px #f00; }
+        
+        /* 呼吸動畫 (待命模式) */
+        .voice-line.idle { animation: voice-idle 3s ease-in-out infinite; }
+        .line2.idle { animation-delay: 0.5s; }
+        .line3.idle { animation-delay: 1s; }
+
+        /* 說話動畫 (Speaking 模式) */
+        .voice-line.active { background-color: #f00; box-shadow: 0 0 15px #f00, inset 0 0 3px #fff; animation: none; }
+
+        @keyframes voice-idle { 0%, 100% { height: 10px; background-color: #300; } 50% { height: 40px; background-color: #600; } }
+
+        /* HUD 與其餘結構保持不變 */
+        #main-ui { display: flex; flex-direction: column; height: 100%; }
+        .hud-window { border: 1px solid var(--primary); background: var(--panel-bg); height: 60px; padding: 10px; font-size: 0.75rem; color: #fff; margin-bottom: 10px; }
+        iframe { filter: hue-rotate(150deg) invert(1); background: #111; }
     </style>
 </head>
-<body>
+<body onload="initLoader()">
     <div id="bg-layer"></div>
-    
-    <button id="boot-btn" onclick="bootSystem()">BOOT SYSTEM</button>
+
+    <div id="security-mask">
+        <h1 style="color: #fff;">K.I.T.T. SYSTEM 2026</h1>
+        <p style="color: #600;">ACCESS KEY REQUIRED</p>
+        <input type="password" id="key-input" placeholder=">> ENTER KEY" maxlength="4" oninput="checkKey()">
+    </div>
 
     <div class="main-frame" id="main-ui" style="display: none;">
-        <header style="text-align: center; letter-spacing: 5px; border-bottom: 1px solid #500; padding-bottom: 10px; margin-bottom: 10px;">K.I.T.T. 2026 TACTICAL HUD</header>
-
-        <div class="hud-grid">
-            <div class="hud-window">
-                <div class="window-title">ENVIRONMENTAL SENSORS</div>
-                <div class="window-content">
-                    <div id="full-date" style="font-size: 1.2rem;"></div>
-                    <div id="full-time" class="time-text"></div>
-                    <div id="weather" style="color: #0f0; margin-top: 15px;">>> 正在讀取三峽區氣象數據...</div>
-                </div>
+        <header style="text-align: center; letter-spacing: 5px;">K.I.T.T. PERSONALITY MATRIX</header>
+        <div style="flex-grow:1; display:flex; flex-direction:column; justify-content:center;">
+            
+            <div class="voice-box-container" id="voice-box" onclick="testSpeak()">
+                <div class="voice-line line1 idle"></div>
+                <div class="voice-line line2 idle"></div>
+                <div class="voice-line line3 idle"></div>
             </div>
-
-            <div class="hud-window">
-                <div class="window-title">TACTICAL NAVIGATION</div>
-                <div class="window-content">
-                    <iframe id="map-frame" src=""></iframe>
-                </div>
-            </div>
+            
+            <p style="text-align:center; color:#fff; font-size:0.8rem; margin-bottom:50px;">>> SANXIA (Located) | <span id="full-time"></span></p>
         </div>
-
-        <div class="bottom-section">
-            <div class="status-log" id="sys-log">>> 待命。點擊 BOOT 啟動核心。</div>
-            <div class="scanner-container">
-                <div class="led-array" id="scanner-leds"></div>
-            </div>
-        </div>
+        <div id="sys-log" class="hud-window">>> 系統待命中。</div>
     </div>
 
     <script>
-        let leds = [];
-        let currentIdx = 0;
-        let direction = 1;
+        const THE_KEY = "KITT"; // 您要求的 KEY (解鎖密碼)
+        const lines = document.querySelectorAll('.voice-line');
+        const synth = window.speechSynthesis;
+        let speakInterval;
 
-        // 生成 LED
-        const container = document.getElementById('scanner-leds');
-        for (let i = 0; i < 8; i++) {
-            const led = document.createElement('div');
-            led.className = 'led';
-            container.appendChild(led);
-            leds.push(led);
+        function initLoader() {
+            document.getElementById('key-input').focus();
         }
 
-        function bootSystem() {
-            document.getElementById('boot-btn').style.display = 'none';
-            document.getElementById('main-ui').style.display = 'flex';
-            
-            // 啟動地圖與數據
-            document.getElementById('map-frame').src = "http://googleusercontent.com/maps.google.com/6";
-            setInterval(updateClock, 1000);
-            setInterval(scanLeds, 180);
-            updateClock();
-            
-            addLog("所有副系統已在線。歡迎回來，Brett。");
-            
-            // 語音自我介紹
-            const utter = new SpeechSynthesisUtterance("Hello, Brett. All systems are operational.");
-            utter.lang = 'en-US';
-            utter.rate = 0.9;
-            window.speechSynthesis.speak(utter);
-        }
-
-        function updateClock() {
-            const now = new Date();
-            document.getElementById('full-date').innerText = now.toLocale
+        // 核心功能 1: 安全驗證
+        function checkKey() {
+            const input = document.getElementById('key-input');
+            if (input.value.toUpperCase() === THE_KEY) {
+                addLog("身分驗證成功。解鎖人格矩陣。");
+                input.style.borderColor
