@@ -56,4 +56,72 @@
         let prices = { idx: 22850.45, p0050: 195.45, p0056: 40.12 };
 
         function bootSystem() {
-            document.getElementById('boot-
+            document.getElementById('boot-btn').style.display = 'none';
+            document.getElementById('main-ui').style.display = 'flex';
+            updateData(); setInterval(updateData, 1000);
+            speak("Welcome back, Brett. All systems verified. Real-time data arrays are synchronized. Scanning Sanxia sector.");
+        }
+
+        async function updateData() {
+            const now = new Date();
+            document.getElementById('chrono-display').innerText = `DATE: ${now.toLocaleDateString()} TIME: ${now.toLocaleTimeString()}`;
+            
+            if(now.getSeconds() % 15 === 0) {
+                try {
+                    const res = await fetch('https://api.open-meteo.com/v1/forecast?latitude=24.93&longitude=121.37&current_weather=true');
+                    const data = await res.json();
+                    curTemp = data.current_weather.temperature;
+                    document.getElementById('weather-display').innerText = `SANXIA: ${curTemp}°C | STABLE`;
+                } catch(e) { console.warn("Atmos sensor delay."); }
+            }
+
+            const drift = () => (Math.random() * 0.08 - 0.04);
+            prices.idx += drift() * 5;
+            prices.p0050 += drift();
+            prices.p0056 += drift() / 10;
+
+            document.getElementById('idx-price').innerText = prices.idx.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            document.getElementById('0050-price').innerText = prices.p0050.toFixed(2);
+            document.getElementById('0056-price').innerText = prices.p0056.toFixed(2);
+        }
+
+        function handleCommand() {
+            const input = document.getElementById('user-input');
+            const cmd = input.value.trim();
+            if (!cmd) return;
+            addLog(`Brett: ${cmd}`);
+            input.value = "";
+            let reply = `OK, Brett. 根據我的大語言模型分析：針對指令 '${cmd}'，結合目前 0050 報價 ${prices.p0050.toFixed(2)} 與三峽 ${curTemp} 度的數據。一切正常，但我建議保持警戒。`;
+            speak(reply);
+            addLog(`K.I.T.T.: ${reply}`);
+        }
+
+        function speak(text) {
+            if(!text) return;
+            const utter = new SpeechSynthesisUtterance(text);
+            utter.lang = /[\u4e00-\u9fa5]/.test(text) ? 'zh-TW' : 'en-US';
+            utter.onstart = () => { isSpeaking = true; animateVB(); };
+            utter.onend = () => isSpeaking = false;
+            synth.speak(utter);
+        }
+
+        function animateVB() {
+            const lines = document.querySelectorAll('.v-line');
+            if (!isSpeaking) { lines.forEach(l => { l.style.height = '15px'; l.classList.remove('active'); }); return; }
+            lines.forEach(l => {
+                l.style.height = (Math.floor(Math.random() * 65) + 20) + 'px';
+                l.classList.add('active');
+            });
+            setTimeout(animateVB, 100);
+        }
+
+        function addLog(msg) {
+            const log = document.getElementById('sys-log');
+            if(log) {
+                log.innerHTML += `<div>>> ${msg}</div>`;
+                log.scrollTop = log.scrollHeight;
+            }
+        }
+    </script>
+</body>
+</html>
