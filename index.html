@@ -3,34 +3,118 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>K.I.T.T. 2026 - ALWAYS READY</title>
+    <title>K.I.T.T. 2026 - FULL SENSOR V21.0</title>
     <style>
-        body, html { margin: 0; padding: 0; background: #000; color: #f00; font-family: 'Courier New', monospace; height: 100%; overflow: hidden; }
-        #kitt-terminal { display: block; padding: 20px; text-align: center; }
-        .status-box { border: 1px solid #f00; padding: 20px; margin-top: 50px; background: rgba(50, 0, 0, 0.3); box-shadow: 0 0 15px #f00; }
-        .scanning-line { width: 100%; height: 2px; background: #f00; position: absolute; top: 0; animation: scan 2s infinite; }
-        @keyframes scan { from { top: 0; } to { top: 100%; } }
+        :root { --primary: #f00; --panel-bg: rgba(30, 0, 0, 0.85); }
+        body, html { margin: 0; padding: 0; background: #000; color: var(--primary); font-family: 'Courier New', monospace; height: 100%; overflow: hidden; }
+        body { background-image: url('image_12.jpg'); background-size: cover; background-position: center; }
+
+        .main-frame { position: relative; width: 100vw; height: 100vh; display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: auto 1fr auto auto; gap: 10px; padding: 15px; box-sizing: border-box; background: rgba(0,0,0,0.4); }
+
+        /* HUD 視窗 */
+        .hud-window { border: 1px solid var(--primary); background: var(--panel-bg); border-radius: 5px; overflow: hidden; display: flex; flex-direction: column; box-shadow: inset 0 0 15px #000; }
+        .window-title { background: var(--primary); color: #000; font-size: 0.7rem; padding: 2px 10px; font-weight: bold; text-transform: uppercase; }
+
+        /* 環境感測數據 (新增加項目) */
+        .env-data { padding: 10px; display: flex; flex-direction: column; gap: 5px; }
+        .date-text { font-size: 1.2rem; font-weight: bold; letter-spacing: 2px; }
+        .time-text { font-size: 2.2rem; font-weight: bold; color: #fff; text-shadow: 0 0 10px var(--primary); }
+        .weather-text { color: #0f0; font-size: 0.9rem; margin-top: 5px; }
+
+        /* 視頻與地圖區塊 */
+        .view-port { flex-grow: 1; background: #000; position: relative; }
+        iframe { width: 100%; height: 100%; border: none; filter: hue-rotate(150deg) invert(1) contrast(1.2); }
+
+        /* 下方狀態欄 */
+        .status-panel { grid-column: span 2; background: var(--panel-bg); border: 1px solid var(--primary); padding: 10px; height: 80px; }
+        #sys-log { font-size: 0.7rem; color: #fff; height: 60px; overflow-y: auto; }
+
+        /* 掃描儀 */
+        .scanner-frame { grid-column: span 2; width: 100%; height: 15px; border: 1px solid #333; background: #000; position: relative; overflow: hidden; }
+        .scanner-bar { position: absolute; width: 120px; height: 100%; background: var(--primary); box-shadow: 0 0 15px var(--primary); animation: scan-move 2.5s ease-in-out infinite; }
+        @keyframes scan-move { 0%, 100% { left: 5%; } 50% { left: 85%; } }
     </style>
 </head>
-<body onload="autoBoot()">
-    <div id="kitt-terminal">
-        <div class="scanning-line"></div>
-        <div class="status-box">
-            <h1>系統已連線</h1>
-            <p>歡迎回來，Brett。安全協定已降級，系統現在為您敞開。</p>
-            <p>核心狀態：運作中</p>
-            <p id="clock">正在校對時序...</p>
+<body onload="initSystem()">
+    <div class="main-frame">
+        <header style="grid-column: span 2; text-align: center; font-size: 1.2rem; text-shadow: 0 0 10px var(--primary);">K.I.T.T. 2026 CHRONO-SENSOR V21.0</header>
+
+        <div class="hud-window">
+            <div class="window-title">Environmental Sensors</div>
+            <div class="env-data">
+                <div id="full-date" class="date-text">2026/03/21 SAT</div>
+                <div id="full-time" class="time-text">10:38:00</div>
+                <div id="weather-status" class="weather-text">>> 正在連接衛星氣象站...</div>
+            </div>
         </div>
+
+        <div class="hud-window">
+            <div class="window-title">Tactical Viewport</div>
+            <div class="view-port">
+                <iframe src="https://maps.google.com/maps?q=24.9332,121.368&z=13&output=embed"></iframe>
+            </div>
+        </div>
+
+        <div class="status-panel">
+            <div id="sys-log">>> 核心時鐘校對完成。環境感測器已就緒。</div>
+        </div>
+
+        <div class="scanner-frame"><div class="scanner-bar"></div></div>
     </div>
 
     <script>
-        function autoBoot() {
-            // 自動啟動時鐘監測
-            setInterval(() => {
-                document.getElementById('clock').innerText = "系統時間：" + new Date().toLocaleTimeString();
-            }, 1000);
+        function initSystem() {
+            updateClock();
+            setInterval(updateClock, 1000);
+            fetchWeather();
+            // 每 15 分鐘自動刷新天氣數據
+            setInterval(fetchWeather, 900000);
             
-            console.log("自動引導完成。歡迎，Brett。");
+            addLog("所有系統均正常運作，Brett。");
+        }
+
+        function updateClock() {
+            const now = new Date();
+            const days = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
+            
+            const yyyy = now.getFullYear();
+            const mm = String(now.getMonth() + 1).padStart(2, '0');
+            const dd = String(now.getDate()).padStart(2, '0');
+            const day = days[now.getDay()];
+            
+            const hh = String(now.getHours()).padStart(2, '0');
+            const min = String(now.getMinutes()).padStart(2, '0');
+            const ss = String(now.getSeconds()).padStart(2, '0');
+
+            document.getElementById('full-date').innerText = `${yyyy}/${mm}/${dd} ${day}`;
+            document.getElementById('full-time').innerText = `${hh}:${min}:${ss}`;
+        }
+
+        async function fetchWeather() {
+            try {
+                // 定位座標：三峽區 (24.93, 121.37)
+                const response = await fetch('https://api.open-meteo.com/v1/forecast?latitude=24.93&longitude=121.37&current_weather=true');
+                const data = await response.json();
+                const temp = data.current_weather.temperature;
+                const code = data.current_weather.weathercode;
+                
+                // 簡單的天氣代碼轉換
+                let status = "掃描中";
+                if(code === 0) status = "晴朗 (CLEAR)";
+                else if(code <= 3) status = "多雲 (CLOUDY)";
+                else if(code >= 45) status = "陣雨/霧 (PRECIPITATION)";
+                
+                document.getElementById('weather-status').innerText = `>> 三峽區域：${temp}°C | 狀態：${status}`;
+                addLog(`氣象更新：三峽氣溫 ${temp}°C，${status}。`);
+            } catch (e) {
+                document.getElementById('weather-status').innerText = ">> 氣象鏈路中斷。";
+            }
+        }
+
+        function addLog(msg) {
+            const log = document.getElementById('sys-log');
+            log.innerHTML += `<div>>> ${msg}</div>`;
+            log.scrollTop = log.scrollHeight;
         }
     </script>
 </body>
