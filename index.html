@@ -1,42 +1,145 @@
-/* 掃描儀容器：佔畫面 1/3，並居中 */
-.scanner-container { 
-    width: 33.3vw; /* 佔據螢幕寬度的三分之一 */
-    min-width: 300px; /* 確保在手機上不會縮得太小 */
-    height: 40px; 
-    border: 2px solid #333; 
-    background: #000; 
-    display: flex; 
-    align-items: center; 
-    justify-content: center; 
-    margin: 20px auto; /* 核心：自動邊距實現左右居中 */
-    box-shadow: inset 0 0 15px #000, 0 0 10px rgba(255, 0, 0, 0.2);
-    border-radius: 3px;
-    z-index: 100;
-    position: relative; /* 確保在 main-frame 內正確定位 */
-}
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>K.I.T.T. 2026 - ULTIMATE V24.0</title>
+    <style>
+        :root { --primary: #f00; --panel-bg: rgba(20, 0, 0, 0.95); }
+        body, html { margin: 0; padding: 0; background: #000; color: var(--primary); font-family: 'Courier New', monospace; height: 100vh; overflow: hidden; }
+        
+        /* 背景圖層 */
+        #bg-layer { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-image: url('image_12.jpg'); background-size: cover; background-position: center; opacity: 0.4; z-index: -1; }
 
-.led-array { 
-    display: flex; 
-    gap: 0.8vw; /* 間距隨螢幕寬度微調 */
-    width: 90%; 
-    justify-content: center;
-}
+        .main-frame { position: relative; z-index: 10; height: 100vh; display: flex; flex-direction: column; padding: 25px; box-sizing: border-box; justify-content: space-between; }
 
-.led { 
-    flex-grow: 1; /* 讓燈珠自動填滿 1/3 的空間 */
-    height: 20px; 
-    background-color: #100; 
-    border-radius: 1px; 
-    transition: background-color 0.2s, box-shadow 0.2s; 
-}
+        /* 頂部戰術資訊 */
+        .hud-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; height: 180px; }
+        .hud-window { border: 1px solid var(--primary); background: var(--panel-bg); border-radius: 4px; overflow: hidden; display: flex; flex-direction: column; box-shadow: inset 0 0 10px #000; }
+        .window-title { background: var(--primary); color: #000; font-size: 0.75rem; padding: 4px 10px; font-weight: bold; letter-spacing: 2px; }
+        .window-content { flex-grow: 1; padding: 12px; display: flex; flex-direction: column; justify-content: center; }
 
-.led.active { 
-    background-color: #f00; 
-    box-shadow: 0 0 15px 5px #f00, inset 0 0 3px #fff; 
-    transition: 0s; 
-}
+        .time-text { font-size: 2.2rem; font-weight: bold; color: #fff; text-shadow: 0 0 10px #f00; }
+        .weather-text { color: #0f0; font-size: 0.9rem; margin-top: 8px; }
 
-.led.fade { 
-    background-color: #600; 
-    box-shadow: 0 0 8px 2px #f00; 
-}
+        /* 核心：1/3 寬度居中語音箱 */
+        .voice-box-container { 
+            width: 33.3vw; 
+            min-width: 300px; 
+            height: 140px; 
+            background: #000; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            margin: 0 auto; /* 核心居中指令 */
+            box-shadow: 0 0 25px rgba(255, 0, 0, 0.4), inset 0 0 15px #000;
+            border: 2px solid #333;
+            border-radius: 8px; 
+            z-index: 100; 
+            gap: 15px; 
+            cursor: pointer;
+        }
+        .voice-line { 
+            width: 14px; 
+            height: 15px; 
+            background-color: #400; 
+            border-radius: 2px; 
+            box-shadow: 0 0 8px #f00; 
+            transition: height 0.05s ease-out, background-color 0.2s; 
+        }
+        
+        /* 慢速呼吸動畫 (待命) */
+        .voice-line.idle { animation: voice-breath 3s ease-in-out infinite; }
+        .line2.idle { animation-delay: 0.6s; }
+        .line3.idle { animation-delay: 1.2s; }
+
+        /* 說話跳動動畫 */
+        .voice-line.active { background-color: #f00; box-shadow: 0 0 20px #f00, inset 0 0 3px #fff; animation: none; }
+
+        @keyframes voice-breath { 0%, 100% { height: 12px; background-color: #400; } 50% { height: 50px; background-color: #800; } }
+
+        /* 底部日誌 */
+        .status-log { border: 1px solid var(--primary); background: var(--panel-bg); height: 70px; padding: 10px; font-size: 0.75rem; color: #fff; overflow-y: auto; }
+
+        /* 啟動按鈕 */
+        #boot-btn { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); padding: 20px 50px; background: #f00; color: #000; font-weight: bold; border: 2px solid #fff; cursor: pointer; z-index: 1000; font-size: 1.4rem; box-shadow: 0 0 30px #f00; letter-spacing: 3px; }
+    </style>
+</head>
+<body>
+    <div id="bg-layer"></div>
+
+    <button id="boot-btn" onclick="bootSystem()">ACTIVATE K.I.T.T.</button>
+
+    <div class="main-frame" id="main-ui" style="display: none;">
+        <header style="text-align: center; letter-spacing: 8px; font-size: 1.4rem; text-shadow: 0 0 10px #f00;">K.I.T.T. TACTICAL CENTER 2026</header>
+
+        <div class="hud-grid">
+            <div class="hud-window">
+                <div class="window-title">ENVIRONMENTAL SENSORS</div>
+                <div class="window-content">
+                    <div id="full-date" style="font-size: 1rem;"></div>
+                    <div id="full-time" class="time-text">--:--:--</div>
+                    <div id="weather" class="weather-text">>> 掃描三峽區環境數據...</div>
+                </div>
+            </div>
+            <div class="hud-window">
+                <div class="window-title">SYSTEM STATUS</div>
+                <div class="window-content" style="color:#0f0; font-size: 0.8rem;">
+                    <div>>> CPU: OPERATIONAL</div>
+                    <div>>> SCANNER: 1/3 CALIBRATED</div>
+                    <div>>> LOCATION: NEW TAIPEI</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="voice-box-container" id="voice-box" onclick="testSpeak()">
+            <div class="voice-line line1 idle"></div>
+            <div class="voice-line line2 idle"></div>
+            <div class="voice-line line3 idle"></div>
+        </div>
+
+        <div id="sys-log" class="status-log">>> 核心鏈路已就緒。</div>
+    </div>
+
+    <script>
+        const lines = document.querySelectorAll('.voice-line');
+        const synth = window.speechSynthesis;
+        let speakInterval;
+
+        function bootSystem() {
+            document.getElementById('boot-btn').style.display = 'none';
+            document.getElementById('main-ui').style.display = 'flex';
+            
+            // 啟動數據同步
+            setInterval(updateClock, 1000);
+            updateClock();
+            fetchWeather();
+            
+            addLog("授權通過。歡迎回來，Brett。");
+            speak("All systems are operational, Brett. The voice box has been centered and calibrated to one-third screen width.");
+        }
+
+        function speak(text) {
+            const utter = new SpeechSynthesisUtterance(text);
+            utter.lang = 'en-US';
+            utter.rate = 0.95;
+            
+            utter.onstart = () => {
+                lines.forEach(l => { l.classList.remove('idle'); l.classList.add('active'); });
+                if(speakInterval) clearInterval(speakInterval);
+                speakInterval = setInterval(() => {
+                    lines.forEach(l => { l.style.height = Math.floor(Math.random() * 85 + 15) + '%'; });
+                }, 50);
+            };
+            
+            utter.onend = () => {
+                clearInterval(speakInterval);
+                lines.forEach(l => { l.classList.remove('active'); l.classList.add('idle'); l.style.height = ''; });
+            };
+            
+            synth.speak(utter);
+        }
+
+        function updateClock() {
+            const now = new Date();
+            document.
