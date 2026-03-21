@@ -2,7 +2,7 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <title>K.I.T.T. 2026 - NO PASS V23.1</title>
+    <title>K.I.T.T. 2026 - QUICK START V23.1</title>
     <style>
         :root { --primary: #f00; --panel-bg: rgba(20, 0, 0, 0.95); }
         body, html { margin: 0; padding: 0; background: #000; color: var(--primary); font-family: 'Courier New', monospace; height: 100vh; overflow: hidden; }
@@ -16,7 +16,7 @@
             margin: 20px auto; box-shadow: 0 0 20px rgba(255, 0, 0, 0.3);
             border-radius: 5px; z-index: 100; gap: 10px; cursor: pointer;
         }
-        .voice-line { width: 12px; height: 50%; background-color: #300; border-radius: 2px; transition: all 0.05s ease-out; box-shadow: 0 0 5px #f00; }
+        .voice-line { width: 12px; height: 10%; background-color: #300; border-radius: 2px; transition: all 0.05s ease-out; box-shadow: 0 0 5px #f00; }
         
         /* 呼吸動畫 (待命模式) */
         .voice-line.idle { animation: voice-idle 3s ease-in-out infinite; }
@@ -26,7 +26,7 @@
         /* 說話動畫 (Speaking 模式) */
         .voice-line.active { background-color: #f00; box-shadow: 0 0 15px #f00, inset 0 0 3px #fff; animation: none; }
 
-        @keyframes voice-idle { 0%, 100% { height: 10px; background-color: #300; } 50% { height: 40px; background-color: #600; } }
+        @keyframes voice-idle { 0%, 100% { height: 10px; background-color: #300; } 50% { height: 45px; background-color: #600; } }
 
         /* HUD 與日誌 */
         .hud-window { border: 1px solid var(--primary); background: var(--panel-bg); height: 70px; padding: 10px; font-size: 0.8rem; color: #fff; overflow-y: auto; margin-top: 10px; }
@@ -41,64 +41,4 @@
     <button id="boot-btn" onclick="bootSystem()">ACTIVATE K.I.T.T.</button>
 
     <div class="main-frame" id="main-ui" style="display: none;">
-        <header style="text-align: center; letter-spacing: 5px; font-size: 1.2rem;">K.I.T.T. TACTICAL HUD 2026</header>
-        
-        <div style="flex-grow:1; display:flex; flex-direction:column; justify-content:center;">
-            <div class="voice-box-container" id="voice-box" onclick="testSpeak()">
-                <div class="voice-line line1 idle"></div>
-                <div class="voice-line line2 idle"></div>
-                <div class="voice-line line3 idle"></div>
-            </div>
-            <p style="text-align:center; color:#fff; font-size:0.9rem;">>> STATUS: STANDBY | <span id="full-time"></span></p>
-        </div>
-
-        <div id="sys-log" class="hud-window">>> 系統已就緒。</div>
-    </div>
-
-    <script>
-        const lines = document.querySelectorAll('.voice-line');
-        const synth = window.speechSynthesis;
-        let speakInterval;
-
-        function bootSystem() {
-            document.getElementById('boot-btn').style.display = 'none';
-            document.getElementById('main-ui').style.display = 'flex';
-            
-            setInterval(updateClock, 1000);
-            updateClock();
-            
-            addLog("授權通過。歡迎回來，Brett。");
-            speak("All systems are operational, Brett. I am ready for your instructions.");
-        }
-
-        function speak(text) {
-            const utter = new SpeechSynthesisUtterance(text);
-            utter.lang = 'en-US';
-            utter.rate = 0.9;
-            utter.onstart = () => {
-                lines.forEach(l => { l.classList.remove('idle'); l.classList.add('active'); });
-                speakInterval = setInterval(() => {
-                    lines.forEach(l => { l.style.height = Math.floor(Math.random() * 80 + 20) + '%'; });
-                }, 50);
-            };
-            utter.onend = () => {
-                clearInterval(speakInterval);
-                lines.forEach(l => { l.classList.remove('active'); l.classList.add('idle'); l.style.height = ''; });
-            };
-            synth.speak(utter);
-        }
-
-        function updateClock() {
-            document.getElementById('full-time').innerText = new Date().toLocaleTimeString();
-        }
-
-        function addLog(msg) {
-            const log = document.getElementById('sys-log');
-            log.innerHTML += `<div>>> ${msg}</div>`;
-            log.scrollTop = log.scrollHeight;
-        }
-
-        function testSpeak
-            const now = new Date();
-            const days = ['SUN','MON','TUE','WED','THU','FRI','SAT'];
-            document.getElementById('full-date').
+        <header style="text-align: center; letter-spacing: 5px; font-size: 1.2rem; text-shadow: 0 0 10px #f00;">K.I.
