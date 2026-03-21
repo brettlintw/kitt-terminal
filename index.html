@@ -2,7 +2,7 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <title>K.I.T.T. V33.1 - REAL-TIME FINANCIAL HUD</title>
+    <title>K.I.T.T. V33.1 - FINAL STABLE HUD</title>
     <style>
         :root { --primary: #f00; --panel-bg: rgba(20, 0, 0, 0.95); --glass-blur: blur(10px); }
         body, html { margin: 0; padding: 0; background: #000; color: #fff; font-family: 'SF Pro Display', Roboto, sans-serif; height: 100vh; overflow: hidden; }
@@ -53,11 +53,7 @@
     <script>
         const synth = window.speechSynthesis;
         let isSpeaking = false, curTemp = "21";
-        // 初始基點
         let prices = { idx: 22850.45, p0050: 195.45, p0056: 40.12 };
 
         function bootSystem() {
-            document.getElementById('boot-btn').style.display = 'none';
-            document.getElementById('main-ui').style.display = 'flex';
-            updateData(); setInterval(updateData, 1000);
-            speak("Welcome back, Brett.
+            document.getElementById('boot-
