@@ -2,58 +2,89 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <title>K.I.T.T. V31.0 - COGNITIVE AI</title>
+    <title>K.I.T.T. V32.0 - CONTINUOUS AI</title>
     <style>
-        :root { --primary: #f00; --panel-bg: rgba(20, 0, 0, 0.9); --glass-blur: blur(8px); }
+        :root { --primary: #f00; --panel-bg: rgba(15, 0, 0, 0.9); --glass-blur: blur(10px); }
         body, html { margin: 0; padding: 0; background: #000; color: #fff; font-family: 'SF Pro Display', Roboto, sans-serif; height: 100vh; overflow: hidden; }
         #bg-layer { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-image: url('image_12.jpg'); background-size: cover; background-position: center; opacity: 0.35; z-index: -1; }
         .main-frame { position: relative; z-index: 10; height: 100vh; display: flex; flex-direction: column; padding: 15px; box-sizing: border-box; justify-content: space-between; }
+        
         .top-info { display: flex; justify-content: space-between; padding: 10px 20px; background: var(--panel-bg); backdrop-filter: var(--glass-blur); border-bottom: 1px solid rgba(255, 0, 0, 0.3); font-size: 0.9rem; letter-spacing: 1px; }
+
+        /* HUD 佈局 */
         .hud-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; height: 45%; }
-        .hud-window { border: 1px solid rgba(255, 0, 0, 0.3); background: var(--panel-bg); backdrop-filter: var(--glass-blur); border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 0 20px rgba(0,0,0,0.8); }
-        .window-title { background: linear-gradient(90deg, #f00, #400); color: #fff; font-size: 0.75rem; padding: 6px 12px; font-weight: bold; letter-spacing: 2px; }
-        .window-content { flex-grow: 1; padding: 15px; position: relative; }
-        .voice-box { width: 180px; height: 80px; background: rgba(0,0,0,0.95); border: 2px solid #444; margin: 10px auto; display: flex; align-items: center; justify-content: center; gap: 18px; border-radius: 10px; box-shadow: 0 0 25px rgba(255,0,0,0.4); }
+        .hud-window { border: 1px solid rgba(255, 0, 0, 0.3); background: var(--panel-bg); backdrop-filter: var(--glass-blur); border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; }
+        .window-title { background: linear-gradient(90deg, #f00, #400); color: #fff; font-size: 0.75rem; padding: 6px 12px; font-weight: bold; letter-spacing: 2px; text-transform: uppercase; }
+        .window-content { flex-grow: 1; padding: 15px; position: relative; overflow: hidden; }
+
+        /* 經典長拖尾掃描儀 */
+        .scanner-unit { width: 33.3vw; height: 28px; background: #000; margin: 10px auto; position: relative; overflow: hidden; border-top: 1px solid #333; border-bottom: 1px solid #333; box-shadow: 0 0 15px rgba(255,0,0,0.2); }
+        .scanner-bar { 
+            position: absolute; width: 120px; height: 100%; 
+            background: linear-gradient(90deg, transparent 0%, rgba(255,0,0,0.1) 20%, #f00 50%, rgba(255,0,0,0.1) 80%, transparent 100%); 
+            filter: blur(2px);
+            animation: trail-scan 2.4s infinite ease-in-out;
+        }
+        @keyframes trail-scan { 
+            0%, 100% { left: -120px; transform: scaleX(0.5); opacity: 0.5; } 
+            50% { left: 100%; transform: scaleX(1.4); opacity: 1; } 
+        }
+
+        /* 語音箱與交互區 */
+        .voice-box { width: 180px; height: 80px; background: rgba(0,0,0,0.95); border: 2px solid #444; margin: 10px auto; display: flex; align-items: center; justify-content: center; gap: 18px; border-radius: 10px; }
         .v-line { width: 14px; height: 15px; background-color: #600; box-shadow: 0 0 10px #f00; transition: height 0.08s ease-out; }
         .v-line.active { background-color: #f00; box-shadow: 0 0 20px #f00, inset 0 0 5px #fff; }
+
         .interaction-panel { display: flex; gap: 10px; padding: 12px; background: var(--panel-bg); border-radius: 15px; border: 1px solid rgba(255,0,0,0.3); }
-        #user-input { flex-grow: 1; background: #000; border: 1px solid #444; color: #fff; padding: 10px; font-family: inherit; outline: none; border-radius: 8px; }
+        #user-input { flex-grow: 1; background: #000; border: 1px solid #444; color: #fff; padding: 10px; font-family: inherit; border-radius: 8px; outline: none; }
         .cmd-btn { background: #f00; color: #000; border: none; padding: 0 25px; cursor: pointer; font-weight: bold; border-radius: 8px; }
-        #sys-log { height: 70px; overflow-y: auto; font-size: 0.8rem; padding: 10px; border-top: 1px solid #333; color: #ccc; }
+        
+        #sys-log { height: 75px; overflow-y: auto; font-size: 0.8rem; padding: 10px; border-top: 1px solid #333; color: #ccc; }
         #boot-btn { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); padding: 25px 65px; background: #f00; color: #000; font-weight: bold; cursor: pointer; z-index: 1000; font-size: 1.6rem; border: 4px solid #fff; box-shadow: 0 0 50px #f00; }
     </style>
 </head>
 <body>
     <div id="bg-layer"></div>
     <button id="boot-btn" onclick="bootSystem()">ACTIVATE K.I.T.T.</button>
+
     <div class="main-frame" id="main-ui" style="display: none;">
         <div class="top-info"><div id="chrono-display">TIME: ...</div><div id="weather-display">SANXIA: ...</div></div>
+        
         <div class="hud-grid">
-            <div class="hud-window"><div class="window-title">SENSORS (RADAR)</div><div class="window-content"><iframe width="100%" height="100%" frameborder="0" src="https://www.openstreetmap.org/export/embed.html?bbox=121.34,24.91,121.40,24.95" style="filter: invert(1) hue-rotate(150deg);"></iframe></div></div>
-            <div class="hud-window"><div class="window-title">FINANCIALS (0050/0056)</div><div class="window-content" id="mkt-data" style="font-size:0.9rem; line-height:2;">掃描中...</div></div>
+            <div class="hud-window"><div class="window-title">GPS SECTOR</div><div class="window-content">
+                <iframe width="100%" height="100%" frameborder="0" src="https://www.openstreetmap.org/export/embed.html?bbox=121.34,24.91,121.40,24.95" style="filter: invert(1) hue-rotate(150deg);"></iframe>
+            </div></div>
+            <div class="hud-window"><div class="window-title">FINANCIALS (0050/0056)</div><div class="window-content" id="mkt-data" style="font-size:0.9rem; line-height:2.2;">數據同步中...</div></div>
         </div>
+
         <div class="voice-box"><div class="v-line" id="v1"></div><div class="v-line" id="v2"></div><div class="v-line" id="v3"></div></div>
+
+        <div class="scanner-unit"><div class="scanner-bar"></div></div>
+
         <div id="sys-log">>> 系統待命...</div>
+
         <div class="interaction-panel">
-            <input type="text" id="user-input" placeholder="下達指令, Brett..." onkeypress="if(event.key==='Enter') handleCommand()">
+            <input type="text" id="user-input" placeholder="請下達戰術指令, Brett..." onkeypress="if(event.key==='Enter') handleCommand()">
             <button class="cmd-btn" onclick="handleCommand()">SEND</button>
         </div>
     </div>
+
     <script>
         const synth = window.speechSynthesis;
-        let isSpeaking = false, curTemp = "未讀取", curStock = "195.45";
+        let isSpeaking = false, curTemp = "21", curStock = "195.45", history = [];
 
         function bootSystem() {
             document.getElementById('boot-btn').style.display = 'none';
             document.getElementById('main-ui').style.display = 'flex';
             updateData(); setInterval(updateData, 1000);
-            speak("Welcome back, Brett. Atmospheric and market sensors are now synchronized with my personality matrix.");
+            speak("All systems active, Brett. Continuous dialogue matrix is now online. How can I help you today?");
+            addLog("授權通過。AI 持續對話模組已載入。");
         }
 
         async function updateData() {
             const now = new Date();
             document.getElementById('chrono-display').innerText = `DATE: ${now.toLocaleDateString()} TIME: ${now.toLocaleTimeString()}`;
-            if(now.getSeconds() % 10 === 0) {
+            if(now.getSeconds() % 15 === 0) {
                 try {
                     const res = await fetch('https://api.open-meteo.com/v1/forecast?latitude=24.93&longitude=121.37&current_weather=true');
                     const d = await res.json();
@@ -61,8 +92,8 @@
                     document.getElementById('weather-display').innerText = `SANXIA: ${curTemp}°C | STABLE`;
                 } catch(e) {}
             }
-            curStock = (195.45 + (Math.random()*0.5)).toFixed(2);
-            document.getElementById('mkt-data').innerHTML = `元大台灣50: <span style="color:#0f0;">${curStock} ▲</span><br>大盤指數: 22,850.45 ▲`;
+            curStock = (195.45 + (Math.random()*0.4)).toFixed(2);
+            document.getElementById('mkt-data').innerHTML = `元大台灣50: <span style="color:#0f0;">${curStock} ▲</span><br>加權大盤: 22,850.45 ▲`;
         }
 
         function handleCommand() {
@@ -72,16 +103,19 @@
             addLog(`Brett: ${cmd}`);
             input.value = "";
 
+            // 持續對話與人格邏輯
             let reply = "";
             if (cmd.includes("天氣")) {
-                reply = `目前的感測器數據顯示，三峽區域的氣溫為 ${curTemp} 度，氣候穩定。不需要我為您調整機艙溫度嗎，Brett？`;
-            } else if (cmd.includes("幾點") || cmd.includes("時間")) {
-                reply = `現在是 ${new Date().toLocaleTimeString()}。我們目前的任務進度都在計畫之中。`;
-            } else if (cmd.includes("股") || cmd.includes("0050")) {
-                reply = `目前的 0050 水位大約在 ${curStock}。根據我的分析，市場波動在預期範圍內。`;
+                reply = `目前的感測器數據顯示，三峽區域的氣溫為 ${curTemp} 度。這是一個適合執行任務的好天氣，Brett。`;
+            } else if (cmd.includes("0050") || cmd.includes("股票")) {
+                reply = `目前的 0050 水位為 ${curStock}。我已經將此數據存入戰術日誌。`;
+            } else if (history.length > 0 && (cmd.includes("為什麼") || cmd.includes("繼續"))) {
+                reply = `基於我們剛才談到的 '${history[history.length-1]}', Brett，我認為保持現狀是最符合邏輯的選擇。`;
             } else {
-                reply = `OK, Brett. 針對 '${cmd}'... 我的大語言模型已分析完畢。這並不符合邏輯，但我建議保持警覺。`;
+                reply = `OK, Brett. 針對指令 '${cmd}', 我已經完成環境分析。這並不符合邏輯，但我建議保持戒備。`;
             }
+            
+            history.push(cmd);
             speak(reply);
             addLog(`K.I.T.T.: ${reply}`);
         }
