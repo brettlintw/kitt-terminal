@@ -3,49 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>K.I.T.T. 2026 - LED SCANNER V21.1</title>
+    <title>K.I.T.T. 2026 - SLOW TRAIL V21.2</title>
     <style>
         :root { --primary: #f00; --panel-bg: rgba(30, 0, 0, 0.85); }
         body, html { margin: 0; padding: 0; background: #000; color: var(--primary); font-family: 'Courier New', monospace; height: 100%; overflow: hidden; }
         body { background-image: url('image_12.jpg'); background-size: cover; background-position: center; }
 
         .main-frame { position: relative; width: 100vw; height: 100vh; display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: auto 1fr auto auto; gap: 10px; padding: 15px; box-sizing: border-box; background: rgba(0,0,0,0.4); z-index: 2; }
-
-        /* HUD 視窗 */
-        .hud-window { border: 1px solid var(--primary); background: var(--panel-bg); border-radius: 5px; overflow: hidden; display: flex; flex-direction: column; box-shadow: inset 0 0 15px #000; }
-        .window-title { background: var(--primary); color: #000; font-size: 0.7rem; padding: 2px 10px; font-weight: bold; text-transform: uppercase; }
-
-        /* 環境與視訊區塊保持 V21.0 */
+        header { grid-column: span 2; text-align: center; text-shadow: 0 0 10px var(--primary); letter-spacing: 2px; }
+        .hud-window { border: 1px solid var(--primary); background: var(--panel-bg); border-radius: 5px; box-shadow: inset 0 0 15px #000; overflow: hidden; }
+        .window-title { background: var(--primary); color: #000; font-size: 0.7rem; padding: 2px 10px; font-weight: bold; }
         .env-data { padding: 10px; display: flex; flex-direction: column; gap: 5px; }
-        .date-text { font-size: 1.1rem; font-weight: bold; letter-spacing: 1px; }
-        .time-text { font-size: 2.1rem; font-weight: bold; color: #fff; text-shadow: 0 0 10px var(--primary); }
-        .weather-text { color: #0f0; font-size: 0.85rem; margin-top: 5px; }
+        .date-text { font-size: 1.1rem; } .time-text { font-size: 2.1rem; color: #fff; }
         iframe { width: 100%; height: 100%; border: none; filter: hue-rotate(150deg) invert(1) contrast(1.2); }
-
-        /* 下方狀態欄 */
         .status-panel { grid-column: span 2; background: var(--panel-bg); border: 1px solid var(--primary); padding: 10px; height: 80px; }
-        #sys-log { font-size: 0.7rem; color: #fff; height: 60px; overflow-y: auto; }
-
-        /* ========================================= */
-        /* == 1. KITT LED 掃描儀 (左右來回掃動) == */
-        /* ========================================= */
-        .scanner-frame { grid-column: span 2; width: 100%; height: 30px; border: 2px solid #333; background: #000; display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden; box-shadow: inset 0 0 15px #000, 0 0 10px rgba(100, 0, 0, 0.5); }
-        
-        /* LED 陣列容器 */
-        .led-array { display: flex; gap: 5px; /* LED 燈珠之間的物理間隔 */ }
-        
-        /* 單顆 LED 燈珠樣式 */
-        .led { width: 15px; height: 15px; background-color: #300; /* 預設熄滅狀態 */ border-radius: 2px; position: relative; transition: background-color 0.1s; /* 用於漸暗效果 */ }
-        
-        /* LED 點亮時的高光與餘暉效果 */
-        .led.active { background-color: #f00; box-shadow: 0 0 15px 4px rgba(255, 0, 0, 1), inset 0 0 3px #fff; transition: background-color 0s; /* 點亮需要瞬間 */ z-index: 10; }
-        
-        /* 餘暉級別 (Fade-out 拖影) */
-        .led.fade1 { background-color: #a00; box-shadow: 0 0 10px 2px rgba(255, 0, 0, 0.7); }
-        .led.fade2 { background-color: #600; box-shadow: 0 0 5px 1px rgba(255, 0, 0, 0.4); }
-
-    </style>
-</head>
-<body onload="initSystem()">
-    <div class="main-frame">
-        <header style="grid-column: span 2; text-align: center; font-
+        #sys-log { font-size: 0.7rem; color: #fff; height: 60px; overflow-
