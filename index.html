@@ -145,13 +145,29 @@
         finally { animateVoice(false); }
     }
 
-    function authenticate() {
-        if(document.getElementById('passcode').value === '666') {
-            document.getElementById('auth-mask').style.display = 'none';
-            const terminal = document.getElementById('kitt-terminal');
-            terminal.style.backgroundImage = "url('data:image/jpeg;base64," + IMAGE_DATA.replace(/\s/g, '') + "')";
-            terminal.style.display = 'block';
-            fetchWeather();
-            setInterval(() => { document.getElementById('time-ui').innerText = new Date().toTimeString().split(' ')[0]; }, 1000);
-            speak("OK，Brett。全平台系統已對齊。影像模組就緒。");
+   function authenticate() {
+    // 密碼正確性檢查
+    if(document.getElementById('passcode').value === '666') {
+        // 隱藏登入遮罩
+        document.getElementById('auth-mask').style.display = 'none';
+        
+        const terminal = document.getElementById('kitt-terminal');
+        
+        // 關鍵修正：先註解掉背景圖片加載，避免 Base64 數據過大導致當機
+        // terminal.style.backgroundImage = "url('data:image/jpeg;base64," + IMAGE_DATA.replace(/\s/g, '') + "')";
+        
+        // 強制顯示主介面
+        terminal.style.display = 'block';
+        
+        // 啟動子系統
+        fetchWeather();
+        setInterval(() => { 
+            document.getElementById('time-display').innerText = new Date().toLocaleTimeString(); 
+        }, 1000);
+        
+        console.log("系統啟動成功，Brett。");
+    } else {
+        alert("存取拒絕：密碼錯誤。");
+    }
+}
         } else { alert
