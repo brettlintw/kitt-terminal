@@ -2,66 +2,119 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <title>K.I.T.T. 2026 - MEDIA FIX V26.9</title>
+    <title>K.I.T.T. V30.0 - AI INTELLIGENCE</title>
     <style>
-        :root { --primary: #f00; --panel-bg: rgba(10, 0, 0, 0.98); }
+        :root { --primary: #f00; --panel-bg: rgba(10, 0, 0, 0.95); }
         body, html { margin: 0; padding: 0; background: #000; color: var(--primary); font-family: 'Courier New', monospace; height: 100vh; overflow: hidden; }
         .main-frame { height: 100vh; display: flex; flex-direction: column; padding: 15px; box-sizing: border-box; }
-        .hud-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; height: 75%; }
-        .hud-window { border: 2px solid #500; background: var(--panel-bg); border-radius: 8px; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 0 15px #300; }
+        
+        /* HUD 佈局 */
+        .hud-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; height: 70%; }
+        .hud-window { border: 2px solid #500; background: var(--panel-bg); border-radius: 8px; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 0 20px #300; }
         .window-title { background: #f00; color: #000; font-size: 0.75rem; padding: 5px 10px; font-weight: bold; letter-spacing: 2px; }
         .window-content { flex-grow: 1; position: relative; background: #000; }
-        .video-control { padding: 8px; background: #300; display: flex; gap: 8px; border-bottom: 1px solid #f00; }
-        .video-control input { flex-grow: 1; background: #000; border: 1px solid #f00; color: #f00; padding: 6px; font-family: inherit; }
-        .video-control button { background: #f00; color: #000; border: none; padding: 6px 15px; cursor: pointer; font-weight: bold; }
-        .scanner-unit { width: 33.3vw; height: 35px; background: #000; margin: 10px auto; border: 1px solid #333; position: relative; overflow: hidden; }
-        .scanner-bar { position: absolute; width: 100px; height: 100%; background: linear-gradient(90deg, transparent, #f00, #fff, #f00, transparent); animation: scan 2.5s infinite ease-in-out; }
-        @keyframes scan { 0%, 100% { left: -100px; } 50% { left: 100%; } }
-        #boot-btn { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); padding: 25px 60px; background: #f00; color: #000; font-weight: bold; cursor: pointer; z-index: 9999; font-size: 1.5rem; border: 4px solid #fff; }
+
+        /* 經典尖端拖尾掃描儀 */
+        .scanner-unit { width: 33.3vw; height: 30px; background: #000; margin: 15px auto; position: relative; overflow: hidden; border-top: 1px solid #300; border-bottom: 1px solid #300; }
+        .scanner-bar { 
+            position: absolute; width: 140px; height: 100%; 
+            background: linear-gradient(90deg, transparent, #f00 50%, transparent); 
+            filter: blur(2px); animation: sharp-scan 2.2s infinite ease-in-out;
+        }
+        @keyframes sharp-scan { 0%, 100% { left: -140px; transform: scaleX(0.5); } 50% { left: 100%; transform: scaleX(1.5); } }
+
+        /* 麥克風按鈕 */
+        .mic-container { position: fixed; bottom: 100px; right: 40px; text-align: center; z-index: 1000; }
+        .mic-btn { 
+            width: 70px; height: 70px; background: #900; border-radius: 50%; border: 3px solid #fff;
+            display: flex; align-items: center; justify-content: center; cursor: pointer;
+            box-shadow: 0 0 20px #f00; transition: 0.2s;
+        }
+        .mic-btn.active { background: #f00; transform: scale(1.1); box-shadow: 0 0 40px #f00; }
+        .mic-btn svg { width: 35px; fill: #fff; }
+
+        #boot-btn { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); padding: 25px 65px; background: #f00; color: #000; font-weight: bold; cursor: pointer; z-index: 9999; font-size: 1.6rem; border: 4px solid #fff; box-shadow: 0 0 60px #f00; }
     </style>
 </head>
 <body>
-    <button id="boot-btn" onclick="bootSystem()">ACTIVATE K.I.T.T.</button>
+    <button id="boot-btn" onclick="bootSystem()">INITIATE K.I.T.T.</button>
+
+    <div class="mic-container" id="mic-ui" style="display:none;">
+        <div class="mic-btn" id="mic-btn" onmousedown="startListening()" onmouseup="stopListening()">
+            <svg viewBox="0 0 24 24"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/><path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/></svg>
+        </div>
+        <p style="font-size: 0.7rem; margin-top: 10px;">HOLD TO TALK</p>
+    </div>
+
     <div class="main-frame" id="main-ui" style="display: none;">
-        <header style="text-align: center; letter-spacing: 12px; font-size: 1.2rem; margin-bottom:10px; text-shadow: 0 0 10px #f00;">K.I.T.T. MISSION TERMINAL V26.9</header>
+        <header style="text-align: center; letter-spacing: 12px; font-size: 1.2rem; margin-bottom:10px;">K.I.T.T. AI INTELLIGENCE V30.0</header>
+
         <div class="hud-grid">
             <div class="hud-window">
-                <div class="window-title">GPS SECTOR (SANXIA)</div>
+                <div class="window-title">GPS SECTOR (SANXIA SCAN)</div>
                 <div class="window-content">
                     <iframe id="map-frame" width="100%" height="100%" frameborder="0" src="https://www.openstreetmap.org/export/embed.html?bbox=121.34,24.91,121.40,24.95&layer=mapnik" style="filter: invert(1) hue-rotate(150deg) contrast(1.5);"></iframe>
                 </div>
             </div>
             <div class="hud-window">
                 <div class="window-title">TACTICAL VIDEO LINK</div>
-                <div class="video-control">
-                    <input type="text" id="yt-url" placeholder="Paste YouTube Link...">
-                    <button onclick="updateVideo()">CONNECT</button>
-                </div>
                 <div id="video-container" class="window-content">
-                    <iframe id="video-frame" width="100%" height="100%" src="https://www.youtube.com/embed/oNyXYPhnUIs" frameborder="0" allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                    <iframe id="video-frame" width="100%" height="100%" src="https://www.youtube.com/embed/oNyXYPhnUIs?autoplay=1" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
                 </div>
             </div>
         </div>
+
         <div class="scanner-unit"><div class="scanner-bar"></div></div>
-        <div id="sys-log" style="border: 1px solid #f00; height: 80px; padding: 10px; font-size: 0.8rem; background: rgba(0,0,0,0.8); overflow-y: auto;">>> 系統狀態：待命</div>
+        <div id="sys-log" style="border: 1px solid #f00; height: 100px; padding: 10px; font-size: 0.9rem; background: rgba(0,0,0,0.8); overflow-y: auto;">>> 系統待命...</div>
     </div>
+
     <script>
+        const synth = window.speechSynthesis;
+        const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+        recognition.lang = 'zh-TW';
+        recognition.continuous = false;
+
         function bootSystem() {
             document.getElementById('boot-btn').style.display = 'none';
             document.getElementById('main-ui').style.display = 'flex';
-            addLog("授權通過。所有通訊頻率已解鎖。");
-            addLog("提示：若影片未顯示，請點擊視窗中央播放按鈕。");
+            document.getElementById('mic-ui').style.display = 'block';
+            
+            // 經典開機自我介紹
+            const intro = "Knight Rider. A shadowy flight into the dangerous world of a man who does not exist. Michael Knight, a young loner on a crusade to champion the cause of the innocent, the helpless, the powerless, in a world of criminals who operate above the law.";
+            const utter = new SpeechSynthesisUtterance(intro);
+            utter.lang = 'en-US'; utter.rate = 0.9; utter.pitch = 0.8;
+            synth.speak(utter);
+            
+            addLog("系統初始化成功。歡迎回來，Brett。");
         }
-        function updateVideo() {
-            const url = document.getElementById('yt-url').value.trim();
-            let videoId = "";
-            if (url.includes("v=")) videoId = url.split("v=")[1].split("&")[0];
-            else if (url.includes("youtu.be/")) videoId = url.split("youtu.be/")[1].split("?")[0];
-            if (videoId) {
-                document.getElementById('video-container').innerHTML = `<iframe id="video-frame" width="100%" height="100%" src="https://www.youtube.com/embed/${videoId}?autoplay=1" frameborder="0" allowfullscreen allow="autoplay"></iframe>`;
-                addLog(`影像鏈路已重啟，頻道 ID: ${videoId}`);
-            }
+
+        function startListening() {
+            document.getElementById('mic-btn').classList.add('active');
+            recognition.start();
+            addLog("正在監聽指令...");
         }
+
+        function stopListening() {
+            document.getElementById('mic-btn').classList.remove('active');
+            recognition.stop();
+        }
+
+        recognition.onresult = (event) => {
+            const userText = event.results[0][0].transcript;
+            addLog(`Brett: ${userText}`);
+            processAIResponse(userText);
+        };
+
+        function processAIResponse(input) {
+            // 模擬 K.I.T.T. 語氣的簡單邏輯
+            let reply = `OK, Brett. 我已經分析了您的指令：'${input}'。目前的掃描結果顯示一切正常，我建議我們保持警戒。`;
+            
+            const utter = new SpeechSynthesisUtterance(reply);
+            utter.lang = 'zh-TW'; utter.rate = 1.0; utter.pitch = 0.9;
+            synth.speak(utter);
+            addLog(`K.I.T.T.: ${reply}`);
+        }
+
         function addLog(msg) {
             const log = document.getElementById('sys-log');
             log.innerHTML += `<div>>> ${msg}</div>`;
