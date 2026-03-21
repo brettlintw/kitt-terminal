@@ -17,4 +17,110 @@
         .date-text { font-size: 1.1rem; } .time-text { font-size: 2.1rem; color: #fff; }
         iframe { width: 100%; height: 100%; border: none; filter: hue-rotate(150deg) invert(1) contrast(1.2); }
         .status-panel { grid-column: span 2; background: var(--panel-bg); border: 1px solid var(--primary); padding: 10px; height: 80px; }
-        #sys-log { font-size: 0.7rem; color: #fff; height: 60px; overflow-
+        #sys-log { font-size: 0.7rem; color: #fff; height: 60px; overflow-y: auto; }
+
+        /* ========================================= */
+        /* == 1. KITT LED 掃描儀 (左右來回掃動) == */
+        /* ========================================= */
+        .scanner-frame { grid-column: span 2; width: 100%; height: 35px; border: 2px solid #333; background: #000; display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden; }
+        .led-array { display: flex; gap: 4px; /* LED 間距 */ }
+        
+        /* 單顆 LED */
+        .led { width: 18px; height: 18px; background-color: #200; /* 熄滅 */ border-radius: 1px; transition: background-color 0.15s, box-shadow 0.15s; }
+        
+        /* 當前點亮 LED (Active) */
+        .led.active { background-color: #f00; box-shadow: 0 0 15px 4px rgba(255, 0, 0, 1), inset 0 0 3px #fff; transition: background-color 0s; z-index: 10; }
+        
+        /* 強化拖尾效果 (4級拖影) */
+        .led.fade1 { background-color: #c00; box-shadow: 0 0 10px 2px rgba(255, 0, 0, 0.8); }
+        .led.fade2 { background-color: #900; box-shadow: 0 0 7px 1px rgba(255, 0, 0, 0.6); }
+        .led.fade3 { background-color: #600; box-shadow: 0 0 4px 1px rgba(255, 0, 0, 0.4); opacity: 0.7; }
+        .led.fade4 { background-color: #300; box-shadow: 0 0 2px 0.5px rgba(255, 0, 0, 0.2); opacity: 0.4; filter: blur(1px); } /* 增加微弱模糊 */
+
+    </style>
+</head>
+<body onload="initSystem()">
+    <div class="main-frame">
+        <header><h3>K.I.T.T. 2026 LED SLOW V21.2</h3></header>
+        <div class="hud-window"><div class="window-title">Sensors</div><div class="env-data"><div id="full-date" class="date-text"></div><div id="full-time" class="time-text"></div></div></div>
+        <div class="hud-window"><div class="window-title">Tactical Map</div><iframe src="https://maps.google.com/maps?q=24.9332,121.368&z=13&output=embed"></iframe></div>
+        <div class="status-panel"><div id="sys-log">>> 初始化 4 級拖尾與 180ms 掃描週期...</div></div>
+        
+        <div class="scanner-frame"><div class="led-array" id="scanner-leds"></div></div>
+    </div>
+
+    <script>
+        const NUM_LEDS = 8;
+        let currentIdx = 0;
+        let direction = 1;
+        const leds = [];
+
+        function initSystem() {
+            createScanner();
+            setInterval(updateClock, 1000);
+            
+            // 關鍵更新：掃描速度降低至 180ms (冷靜模式)
+            setInterval(scanLeds, 180); 
+            
+            addLog("LED 掃描速率已降低，拖尾效果強化。");
+        }
+
+        function createScanner() {
+            const container = document.getElementById('scanner-leds');
+            for (let i = 0; i < NUM_LEDS; i++) {
+                const led = document.createElement('div');
+                led.className = 'led';
+                container.appendChild(led);
+                leds.push(led);
+            }
+        }
+
+        // LED 左右來回掃動邏輯 (帶拖尾)
+        function scanLeds() {
+            // 1. 清除所有狀態
+            leds.forEach(led => led.className = 'led');
+            
+            // 2. 點亮當前 Active
+            leds[currentIdx].classList.add('active');
+            
+            // 3. 強化 4 級拖影 (LARSON SCANNER)
+            const d = direction; // 用於判斷掃描方向
+            
+            // 下面這個輔助函式用於在指定位置增加拖影級別
+            function applyFade(idx, level) {
+                if(idx >= 0 && idx < NUM_LEDS) {
+                    leds[idx].classList.add(level);
+                }
+            }
+
+            // 根據掃描方向，為後方的燈珠加上不同級別的拖影
+            // 在您冷靜移動時，光跡會優雅地在您身後散開
+            if(d === 1) { // 向右
+                applyFade(currentIdx - 1, 'fade1');
+                applyFade(currentIdx - 2, 'fade2');
+                applyFade(currentIdx - 3, 'fade3');
+                applyFade(currentIdx - 4, 'fade4');
+            } else { // 向左
+                applyFade(currentIdx + 1, 'fade1');
+                applyFade(currentIdx + 2, 'fade2');
+                applyFade(currentIdx + 3, 'fade3');
+                applyFade(currentIdx + 4, 'fade4');
+            }
+
+            // 4. 更新索引
+            currentIdx += direction;
+            if (currentIdx === NUM_LEDS - 1 || currentIdx === 0) {
+                direction *= -1; // 邊界反轉
+            }
+        }
+
+        function updateClock() {
+            const now = new Date();
+            const days = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
+            document.getElementById('full-date').innerText = `${now.getFullYear()}/${String(now.getMonth()+1).padStart(2,'0')}/${String(now.getDate()).padStart(2,'0')} ${days[now.getDay()]}`;
+            document.getElementById('full-time').innerText = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}:${String(now.getSeconds()).padStart(2,'0')}`;
+        }
+        function addLog(msg) { const log = document.getElementById('sys-log'); log.innerHTML += `<div>>> ${msg}</div>`; log.scrollTop = log.scrollHeight; }
+    </script>
+</body>
+</html>
