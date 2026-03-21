@@ -2,64 +2,172 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <title>K.I.T.T. 2026 - STABLE V26.1</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>K.I.T.T. 2026 - ADVANCED V26.0</title>
     <style>
-        :root { --primary: #f00; --bg: #000; }
-        body, html { margin: 0; padding: 0; background: var(--bg); color: var(--primary); font-family: 'Courier New', monospace; height: 100vh; overflow: hidden; }
-        .main-frame { height: 100vh; display: flex; flex-direction: column; padding: 20px; box-sizing: border-box; justify-content: space-between; }
+        :root { --primary: #ff0000; --panel-bg: rgba(30, 0, 0, 0.85); --glass: blur(10px); }
+        body, html { margin: 0; padding: 0; background: #000; color: var(--primary); font-family: 'Courier New', monospace; height: 100vh; overflow: hidden; }
         
-        /* 1/3 居中語音箱 */
-        .voice-box-container { 
-            width: 33.3vw; min-width: 300px; height: 120px; 
-            border: 2px solid #500; background: #050000; 
-            display: flex; align-items: center; justify-content: center; 
-            margin: 20px auto; gap: 10px; cursor: pointer; box-shadow: 0 0 20px #f00;
-        }
-        .voice-line { width: 12px; height: 15px; background-color: #500; box-shadow: 0 0 5px #f00; transition: height 0.05s; }
-        .voice-line.idle { animation: breath 3s ease-in-out infinite; }
-        @keyframes breath { 0%, 100% { height: 15px; } 50% { height: 50px; } }
+        #bg-layer { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-image: url('image_12.jpg'); background-size: cover; background-position: center; opacity: 0.35; z-index: -1; }
 
-        /* 啟動按鈕 - 確保其在最上層 */
-        #boot-btn { 
-            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); 
-            padding: 25px 60px; background: #f00; color: #000; font-weight: bold; 
-            cursor: pointer; z-index: 9999; font-size: 1.5rem; border: 3px solid #fff;
+        .main-frame { position: relative; z-index: 10; height: 100vh; display: flex; flex-direction: column; padding: 20px; box-sizing: border-box; justify-content: space-between; }
+
+        /* HUD 佈局：Glassmorphism 風格 */
+        .hud-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; height: 45%; }
+        .hud-window { 
+            border: 1px solid rgba(255, 0, 0, 0.4); 
+            background: var(--panel-bg); 
+            backdrop-filter: var(--glass);
+            border-radius: 10px; overflow: hidden; display: flex; flex-direction: column;
+            box-shadow: 0 0 25px rgba(0,0,0,0.9), inset 0 0 15px rgba(255,0,0,0.15);
         }
+        .window-title { background: linear-gradient(90deg, #f00, #400); color: #fff; font-size: 0.75rem; padding: 6px 12px; font-weight: bold; letter-spacing: 2px; text-transform: uppercase; }
+        .window-content { flex-grow: 1; padding: 15px; position: relative; }
+
+        /* 雷達動態掃描特效 */
+        .radar-sweep {
+            position: absolute; top: 50%; left: 50%; width: 220%; height: 220%;
+            background: conic-gradient(from 0deg, rgba(255,0,0,0.3) 0deg, transparent 90deg);
+            transform: translate(-50%, -50%);
+            animation: sweep 4s linear infinite;
+            pointer-events: none; z-index: 5;
+        }
+        @keyframes sweep { from { transform: translate(-50%, -50%) rotate(0deg); } to { transform: translate(-50%, -50%) rotate(360deg); } }
+
+        /* 核心：1/3 寬度語音箱且置中 */
+        .voice-box-container { 
+            width: 33.3vw; min-width: 320px; height: 135px; 
+            background: rgba(0,0,0,0.95); display: flex; align-items: center; justify-content: center; 
+            margin: 10px auto; border: 2px solid #555; border-radius: 12px;
+            box-shadow: 0 0 40px rgba(255, 0, 0, 0.6); gap: 18px; cursor: pointer;
+        }
+        .voice-line { width: 15px; height: 15px; background-color: #600; border-radius: 2px; box-shadow: 0 0 12px #f00; transition: height 0.05s ease-out; }
+        .voice-line.idle { animation: breath 3s ease-in-out infinite; }
+        .voice-line.active { background-color: #f00; box-shadow: 0 0 25px #f00, inset 0 0 4px #fff; animation: none; }
+        @keyframes breath { 0%, 100% { height: 15px; } 50% { height: 65px; } }
+
+        /* 金融與環境數據 */
+        .info-item { color: #fff; font-size: 0.95rem; margin-top: 12px; border-left: 3px solid #f00; padding-left: 10px; letter-spacing: 1px; }
+        .price-up { color: #0f0; font-weight: bold; }
+        
+        .status-log { border: 1px solid #f00; background: rgba(15,0,0,0.9); height: 80px; padding: 12px; font-size: 0.75rem; overflow-y: auto; box-shadow: inset 0 0 10px #000; }
+
+        #boot-btn { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); padding: 25px 65px; background: #f00; color: #000; font-weight: bold; border: 4px solid #fff; cursor: pointer; z-index: 1000; font-size: 1.6rem; box-shadow: 0 0 50px #f00; letter-spacing: 5px; }
     </style>
 </head>
 <body>
-    <button id="boot-btn" onclick="bootSystem()">ACTIVATE K.I.T.T.</button>
+    <div id="bg-layer"></div>
+    <button id="boot-btn" onclick="bootSystem()">INITIATE K.I.T.T.</button>
 
-    <div class="main-frame" id="main-ui" style="display:none;">
-        <header style="text-align: center; letter-spacing: 5px;">K.I.T.T. TACTICAL V26.1</header>
-        <div style="flex-grow:1; display:flex; flex-direction:column; justify-content:center;">
-            <div class="voice-box-container">
-                <div class="voice-line idle"></div>
-                <div class="voice-line idle" style="animation-delay: 0.5s;"></div>
-                <div class="voice-line idle" style="animation-delay: 1s;"></div>
+    <div class="main-frame" id="main-ui" style="display: none;">
+        <header style="text-align: center; letter-spacing: 12px; font-size: 1.3rem; text-shadow: 0 0 20px #f00; font-weight: bold;">K.I.T.T. TACTICAL HUD V26.0</header>
+
+        <div class="hud-grid">
+            <div class="hud-window">
+                <div class="window-title">SENSORS & FINANCIAL ANALYSIS</div>
+                <div class="window-content">
+                    <div id="full-time" style="font-size: 2.4rem; font-weight: bold; text-shadow: 0 0 10px #f00;">--:--:--</div>
+                    <div id="weather" style="color: #0f0; margin: 10px 0;">>> 大氣環境掃描中...</div>
+                    <div class="info-item">ETF 0050: <span id="etf-price" class="price-up">195.45</span> <small>▲ LIVE</small></div>
+                    <div class="info-item" style="border-color: #555;">LOCATION: SANXIA SECTOR</div>
+                </div>
             </div>
-            <p id="clock" style="text-align:center; font-size:1.5rem; color:#fff;">--:--:--</p>
+            <div class="hud-window">
+                <div class="window-title">TACTICAL RADAR (LIVE)</div>
+                <div class="window-content" style="padding:0; overflow: hidden;">
+                    <div class="radar-sweep"></div>
+                    <iframe id="map-frame" src="" style="width:100%; height:100%; border:none; opacity:0.5; filter: contrast(1.5);"></iframe>
+                </div>
+            </div>
         </div>
-        <div id="log" style="border:1px solid #f00; padding:10px; height:60px; font-size:0.8rem;">>> 系統待命。</div>
+
+        <div class="voice-box-container" id="voice-box" onclick="manualSpeak()">
+            <div class="voice-line idle"></div>
+            <div class="voice-line idle" style="animation-delay: 0.6s;"></div>
+            <div class="voice-line idle" style="animation-delay: 1.2s;"></div>
+        </div>
+
+        <div id="sys-log" class="status-log">>> 核心初始化序列完成。</div>
     </div>
 
     <script>
+        const lines = document.querySelectorAll('.voice-line');
+        const synth = window.speechSynthesis;
+        let speakInterval;
+
         function bootSystem() {
-            // 強制隱藏按鈕，顯示 UI
-            document.getElementById('boot-btn').style.setProperty('display', 'none', 'important');
+            document.getElementById('boot-btn').style.display = 'none';
             document.getElementById('main-ui').style.display = 'flex';
+            document.getElementById('map-frame').src = "https://www.google.com/maps/embed?pb=!1m14!1m12!1m3!1d14467.433433588236!2d121.3686!3d24.9317!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!5e0!3m2!1szh-TW!2stw!4v1710990000000!5m2!1szh-TW!2stw";
             
-            // 啟動功能
-            setInterval(() => { document.getElementById('clock').innerText = new Date().toLocaleTimeString(); }, 1000);
+            setInterval(updateClock, 1000);
+            updateClock();
+            fetchWeather();
+            startFinanceSim();
+            startAutoLog();
             
-            // 嘗試播放語音
+            addLog("授權通過。歡迎回來，Brett。");
+            
+            const hour = new Date().getHours();
+            let greeting = "Good morning";
+            if(hour >= 12) greeting = "Good afternoon";
+            if(hour >= 18) greeting = "Good evening";
+            
+            speak(`${greeting}, Brett. All systems are operational. Financial scanner active. Radar locked on Sanxia.`);
+        }
+
+        function speak(text) {
+            const utter = new SpeechSynthesisUtterance(text);
+            utter.lang = 'en-US'; utter.rate = 0.95; utter.pitch = 0.85;
+            utter.onstart = () => {
+                lines.forEach(l => { l.classList.remove('idle'); l.classList.add('active'); });
+                if(speakInterval) clearInterval(speakInterval);
+                speakInterval = setInterval(() => {
+                    lines.forEach(l => { l.style.height = Math.floor(Math.random() * 85 + 15) + '%'; });
+                }, 50);
+            };
+            utter.onend = () => {
+                clearInterval(speakInterval);
+                lines.forEach(l => { l.classList.remove('active'); l.classList.add('idle'); l.style.height = ''; });
+            };
+            synth.speak(utter);
+        }
+
+        function startFinanceSim() {
+            setInterval(() => {
+                const base = 195.45;
+                const change = (Math.random() * 0.6 - 0.25).toFixed(2);
+                document.getElementById('etf-price').innerText = (base + parseFloat(change)).toFixed(2);
+            }, 4000);
+        }
+
+        function startAutoLog() {
+            const logs = ["掃描區域頻譜...", "加密鏈路：穩定", "三峽交通流量監控中...", "CPU 負載：12%", "戰術數據同步完成"];
+            setInterval(() => {
+                addLog(logs[Math.floor(Math.random() * logs.length)]);
+            }, 7000);
+        }
+
+        function updateClock() {
+            document.getElementById('full-time').innerText = new Date().toLocaleTimeString();
+        }
+
+        async function fetchWeather() {
             try {
-                const utter = new SpeechSynthesisUtterance("System online. Hello Brett.");
-                window.speechSynthesis.speak(utter);
-                document.getElementById('log').innerText = ">> 語音人格已喚醒。";
-            } catch(e) {
-                document.getElementById('log').innerText = ">> 語音模組受限，但系統已啟動。";
-            }
+                const res = await fetch('https://api.open-meteo.com/v1/forecast?latitude=24.93&longitude=121.37&current_weather=true');
+                const data = await res.json();
+                document.getElementById('weather').innerText = `>> 三峽氣溫: ${data.current_weather.temperature}°C | 天氣穩定`;
+            } catch(e) { document.getElementById('weather').innerText = ">> 感測器離線"; }
+        }
+
+        function addLog(msg) {
+            const log = document.getElementById('sys-log');
+            log.innerHTML += `<div>>> ${msg}</div>`;
+            log.scrollTop = log.scrollHeight;
+        }
+
+        function manualSpeak() {
+            speak("Scanning market volatility. ETF 0050 performance is within expected parameters, Brett.");
         }
     </script>
 </body>
