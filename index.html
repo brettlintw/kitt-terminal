@@ -2,121 +2,169 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <title>K.I.T.T. V30.1 - TACTICAL TERMINAL</title>
+    <title>K.I.T.T. V30.5 - COCKPIT HUD (F.L.A.G.)</title>
     <style>
-        :root { --primary: #f00; --panel-bg: rgba(15, 0, 0, 0.95); }
-        body, html { margin: 0; padding: 0; background: #000; color: var(--primary); font-family: 'Courier New', monospace; height: 100vh; overflow: hidden; }
-        .main-frame { height: 100vh; display: flex; flex-direction: column; padding: 15px; box-sizing: border-box; }
+        :root { --primary: #f00; --panel-glow: rgba(255, 0, 0, 0.4); --glass-bg: rgba(20, 0, 0, 0.85); --glass-blur: blur(8px); }
+        /* 現代高科技字體：優先使用系統 Sans-serif，呈現簡潔感 */
+        body, html { margin: 0; padding: 0; background: #000; color: #fff; font-family: 'SF Pro Display', Roboto, 'Open Sans', Helvetica, Arial, sans-serif; height: 100vh; overflow: hidden; }
         
-        /* HUD 佈局 */
-        .hud-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; height: 65%; }
-        .hud-window { border: 2px solid #500; background: var(--panel-bg); border-radius: 8px; overflow: hidden; display: flex; flex-direction: column; }
-        .window-title { background: #f00; color: #000; font-size: 0.75rem; padding: 5px 10px; font-weight: bold; letter-spacing: 2px; }
-        .window-content { flex-grow: 1; position: relative; background: #000; }
+        /* 裝備：機艙內背景照片 */
+        #bg-layer { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-image: url('image_12.jpg'); background-size: cover; background-position: center; opacity: 0.35; z-index: -1; }
 
-        /* 下方 1/3 尖端拖尾掃描儀 */
-        .scanner-unit { width: 33.3vw; height: 25px; background: #000; margin: 10px auto; position: relative; overflow: hidden; border-top: 1px solid #300; border-bottom: 1px solid #300; }
-        .scanner-bar { position: absolute; width: 120px; height: 100%; background: linear-gradient(90deg, transparent, #f00 50%, transparent); filter: blur(2px); animation: sharp-scan 2.2s infinite ease-in-out; }
-        @keyframes sharp-scan { 0%, 100% { left: -120px; transform: scaleX(0.6); } 50% { left: 100%; transform: scaleX(1.4); } }
+        .main-frame { position: relative; z-index: 10; height: 100vh; display: flex; flex-direction: column; padding: 15px; box-sizing: border-box; justify-content: space-between; }
 
-        /* 文字與語音交互區 */
-        .interaction-panel { display: flex; gap: 10px; padding: 10px; background: #200; border-radius: 8px; border: 1px solid #f00; margin-top: 10px; }
-        #user-input { flex-grow: 1; background: #000; border: 1px solid #f00; color: #f00; padding: 8px; font-family: inherit; }
-        .cmd-btn { background: #f00; color: #000; border: none; padding: 8px 15px; cursor: pointer; font-weight: bold; }
+        /* 現代頂部：移除邊框，改用色塊與陰影 */
+        .top-info { display: flex; justify-content: space-between; padding: 8px 18px; background: linear-gradient(180deg, rgba(30,0,0,0.95), rgba(0,0,0,0)); font-size: 0.9rem; letter-spacing: 2px; box-shadow: 0 4px 10px rgba(0,0,0,0.8); }
+
+        /* 毛玻璃 HUD 視窗 */
+        .hud-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; height: 48%; }
+        .hud-window { 
+            border: 1px solid rgba(255, 0, 0, 0.3); 
+            background: var(--glass-bg); 
+            backdrop-filter: var(--glass-blur); /* 背景模糊特效 */
+            border-radius: 12px; overflow: hidden; display: flex; flex-direction: column;
+            box-shadow: 0 0 25px rgba(0,0,0,0.9), inset 0 0 15px rgba(255,0,0,0.15);
+        }
+        /* 現代標題：漸層底色與修長字體 */
+        .window-title { background: linear-gradient(90deg, #f00, #400); color: #fff; font-size: 0.75rem; padding: 6px 12px; font-weight: bold; letter-spacing: 2px; text-transform: uppercase; }
+        .window-content { flex-grow: 1; position: relative; padding: 15px; }
+
+        /* 金融偵測區：文字現代化 */
+        .market-item { margin-bottom: 10px; border-left: 3px solid var(--primary); padding-left: 12px; font-size: 0.95rem; letter-spacing: 1px; }
+        .market-item span { color: #fff; font-weight: bold; margin-left: 8px; }
+        .price-up { color: #0f0 !important; font-weight: bold; }
+
+        /* 經典三豎線語音箱：增加發光感 */
+        .voice-box { width: 190px; height: 100px; background: rgba(0,0,0,0.9); border: 2px solid #555; margin: 10px auto; display: flex; align-items: center; justify-content: center; gap: 18px; box-shadow: 0 0 40px rgba(255, 0, 0, 0.6); border-radius: 12px; }
+        .v-line { width: 15px; height: 15px; background-color: #600; border-radius: 2px; box-shadow: 0 0 12px var(--primary); transition: height 0.08s ease-out; }
+        .v-line.active { background-color: #f00; box-shadow: 0 0 25px var(--primary), inset 0 0 4px #fff; }
+
+        /* 現代交互面板 */
+        .interaction-panel { display: flex; gap: 12px; padding: 12px; background: var(--glass-bg); backdrop-filter: var(--glass-blur); border: 1px solid rgba(255, 0, 0, 0.3); border-radius: 15px; box-shadow: 0 0 30px rgba(0,0,0,0.9); }
+        #user-input { flex-grow: 1; background: rgba(0,0,0,0.9); border: 1px solid #555; color: #fff; padding: 10px; font-family: inherit; font-size: 0.95rem; outline: none; border-radius: 8px; }
+        #user-input:focus { border-color: #f00; box-shadow: 0 0 10px rgba(255,0,0,0.5); }
+        .cmd-btn { background: linear-gradient(180deg, #f00, #900); color: #000; border: none; padding: 0 20px; cursor: pointer; font-weight: bold; border-radius: 8px; font-size: 0.85rem; letter-spacing: 1px; text-transform: uppercase; transition: 0.2s; }
+        .cmd-btn:hover { box-shadow: 0 0 15px #f00; }
         
-        .mic-icon { width: 40px; height: 40px; background: #600; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; border: 2px solid #fff; }
-        .mic-icon.active { background: #f00; box-shadow: 0 0 15px #f00; }
+        .mic-btn { width: 48px; height: 48px; background: rgba(0,0,0,0.9); border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; border: 2px solid #555; box-shadow: 0 0 10px #000; }
+        .mic-btn.listening { background: #f00; border-color: #fff; box-shadow: 0 0 25px rgba(255, 0, 0, 0.7); animation: pulse 1.2s infinite; }
 
-        #sys-log { border: 1px solid #500; height: 80px; padding: 10px; font-size: 0.85rem; background: rgba(0,0,0,0.8); overflow-y: auto; margin-top: 10px; }
-        #boot-btn { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); padding: 25px 65px; background: #f00; color: #000; font-weight: bold; cursor: pointer; z-index: 9999; font-size: 1.5rem; border: 4px solid #fff; box-shadow: 0 0 50px #f00; }
+        #boot-btn { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); padding: 25px 65px; background: #f00; color: #000; font-weight: bold; border: 4px solid #fff; cursor: pointer; z-index: 1000; font-size: 1.6rem; box-shadow: 0 0 50px #f00; letter-spacing: 5px; text-transform: uppercase; }
+        #sys-log { height: 75px; overflow-y: auto; font-size: 0.8rem; padding: 8px; border-top: 1px solid #333; color: #ccc; letter-spacing: 1px; }
     </style>
 </head>
 <body>
-    <button id="boot-btn" onclick="bootSystem()">ACTIVATE K.I.T.T.</button>
+    <div id="bg-layer"></div>
+    <button id="boot-btn" onclick="bootSystem()">INITIATE K.I.T.T.</button>
 
     <div class="main-frame" id="main-ui" style="display: none;">
-        <header style="text-align: center; letter-spacing: 10px; font-size: 1.1rem; margin-bottom:5px;">K.I.T.T. TACTICAL TERMINAL V30.1</header>
+        <div class="top-info">
+            <div id="chrono-display">SYSTEM TIME: LOADING...</div>
+            <div id="weather-display">SANXIA: SCANNING...</div>
+        </div>
 
         <div class="hud-grid">
-            <div class="hud-window"><div class="window-title">GPS SECTOR</div><div class="window-content">
-                <iframe width="100%" height="100%" frameborder="0" src="https://www.openstreetmap.org/export/embed.html?bbox=121.34,24.91,121.40,24.95&layer=mapnik" style="filter: invert(1) hue-rotate(150deg) contrast(1.2);"></iframe>
+            <div class="hud-window"><div class="window-title">FINANCIAL SCANNER (TWSE/ETF)</div><div class="window-content" id="market-grid">
+                <div class="market-item">加權指數: <span id="idx-price">22,850.45</span> <small style="color:#0f0;">▼</small></div>
+                <div class="market-item">元大台灣50(0050): <span id="0050-price" class="price-up">195.45</span> <small>▲ LIVE</small></div>
+                <div class="market-item">元大高股息(0056): <span id="0056-price">40.12</span> <small style="color:#0f0;">▼</small></div>
             </div></div>
-            <div class="hud-window"><div class="window-title">VIDEO LINK</div><div class="window-content">
-                <iframe id="v-frame" width="100%" height="100%" src="https://www.youtube.com/embed/oNyXYPhnUIs" frameborder="0" allowfullscreen></iframe>
+            <div class="hud-window"><div class="window-title">TACTICAL VIDEO LINK</div><div class="window-content" style="padding:0; overflow: hidden;">
+                <iframe id="v-frame" width="100%" height="100%" src="https://www.youtube.com/embed/oNyXYPhnUIs" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen style="opacity:0.8; filter: contrast(1.2) brightness(0.9);"></iframe>
             </div></div>
         </div>
 
-        <div class="scanner-unit"><div class="scanner-bar"></div></div>
+        <div class="voice-box">
+            <div class="v-line" id="v1"></div><div class="v-line" id="v2"></div><div class="v-line" id="v3"></div>
+        </div>
 
-        <div id="sys-log">>> 系統待命...</div>
+        <div id="sys-log">>> 數據通訊鏈路待命...</div>
 
         <div class="interaction-panel">
-            <div class="mic-icon" id="mic-btn" onclick="toggleSpeech()" title="語音指令">
-                <svg viewBox="0 0 24 24" style="fill:#fff; width:20px;"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/><path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/></svg>
-            </div>
-            <input type="text" id="user-input" placeholder="下達文字指令..." onkeypress="if(event.key==='Enter') sendCommand()">
-            <button class="cmd-btn" onclick="sendCommand()">SEND</button>
+            <div class="mic-btn" id="mic-btn" onclick="toggleMic()"><svg viewBox="0 0 24 24" style="fill:#fff; width:22px;"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/><path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/></svg></div>
+            <input type="text" id="user-input" placeholder="請下達指令, Brett..." onkeypress="if(event.key==='Enter') handleCommand()">
+            <button class="cmd-btn" onclick="handleCommand()">SEND</button>
         </div>
     </div>
 
     <script>
         const synth = window.speechSynthesis;
         let recognition;
-        let isListening = false;
+        let isSpeaking = false;
 
         if ('webkitSpeechRecognition' in window) {
             recognition = new webkitSpeechRecognition();
             recognition.lang = 'zh-TW';
-            recognition.onresult = (e) => {
-                const text = e.results[0][0].transcript;
-                document.getElementById('user-input').value = text;
-                sendCommand();
-            };
-            recognition.onend = () => {
-                isListening = false;
-                document.getElementById('mic-btn').classList.remove('active');
-            };
+            recognition.onresult = (e) => { document.getElementById('user-input').value = e.results[0][0].transcript; handleCommand(); };
+            recognition.onend = () => document.getElementById('mic-btn').classList.remove('listening');
         }
+
+        function toggleMic() { document.getElementById('mic-btn').classList.add('listening'); recognition.start(); }
 
         function bootSystem() {
             document.getElementById('boot-btn').style.display = 'none';
             document.getElementById('main-ui').style.display = 'flex';
-            const intro = "Knight Rider. A shadowy flight into the dangerous world of a man who does not exist. Michael Knight, a young loner on a crusade to champion the cause of the innocent.";
-            speak(intro, 'en-US');
-            addLog("系統初始化成功。歡迎回來，Brett。");
+            updateClock(); setInterval(updateClock, 1000);
+            fetchWeather();
+            startMarketSim();
+            speak("Welcome back, Brett. Cockpit environment engaged. Market and atmosphere sensors online.");
+            addLog("授權通過。機艙環境初始化成功。");
         }
 
-        function toggleSpeech() {
-            if (!recognition) return alert("您的瀏覽器不支持語音識別。");
-            if (isListening) {
-                recognition.stop();
-            } else {
-                recognition.start();
-                isListening = true;
-                document.getElementById('mic-btn').classList.add('active');
-                addLog("正在監聽語音指令...");
-            }
+        function updateClock() {
+            const now = new Date();
+            const y = now.getFullYear(); const m = String(now.getMonth()+1).padStart(2,'0'); const d = String(now.getDate()).padStart(2,'0');
+            const h = String(now.getHours()).padStart(2,'0'); const min = String(now.getMinutes()).padStart(2,'0'); const s = String(now.getSeconds()).padStart(2,'0');
+            document.getElementById('chrono-display').innerText = `DATE: ${y}-${m}-${d} TIME: ${h}:${min}:${s}`;
         }
 
-        function sendCommand() {
+        async function fetchWeather() {
+            try {
+                const res = await fetch('https://api.open-meteo.com/v1/forecast?latitude=24.93&longitude=121.37&current_weather=true');
+                const data = await res.json();
+                document.getElementById('weather-display').innerText = `SANXIA: ${data.current_weather.temperature}°C | STABLE`;
+            } catch(e) { document.getElementById('weather-display').innerText = "ATMOS: SENSOR OFFLINE"; }
+        }
+
+        function startMarketSim() {
+            setInterval(() => {
+                const fluctuate = () => (Math.random() * 2 - 1).toFixed(2);
+                document.getElementById('0050-price').innerText = (195.45 + parseFloat(fluctuate())).toFixed(2);
+            }, 3000);
+        }
+
+        function handleCommand() {
             const input = document.getElementById('user-input');
             const cmd = input.value.trim();
             if (!cmd) return;
             addLog(`Brett: ${cmd}`);
             input.value = "";
-            processAI(cmd);
-        }
-
-        function processAI(input) {
-            let reply = `OK, Brett. 針對指令 '${input}'，我已經完成三峽區域的初步掃描。這並不符合邏輯，但一切都在掌控中。`;
+            let reply = `OK, Brett. 分析指令 '${cmd}'... 機艙系統已準備好為您執行戰術任務。`;
+            speak(reply);
             addLog(`K.I.T.T.: ${reply}`);
-            speak(reply, 'zh-TW');
         }
 
-        function speak(text, lang) {
+        function speak(text) {
             const utter = new SpeechSynthesisUtterance(text);
-            utter.lang = lang; utter.rate = 1.0; utter.pitch = 0.85;
+            utter.lang = /[\u4e00-\u9fa5]/.test(text) ? 'zh-TW' : 'en-US';
+            utter.rate = 1.0; utter.pitch = 0.85;
+            utter.onstart = () => { isSpeaking = true; animateVoiceBox(); };
+            utter.onend = () => { isSpeaking = false; };
             synth.speak(utter);
+        }
+
+        function animateVoiceBox() {
+            const lines = document.querySelectorAll('.v-line');
+            if (!isSpeaking) {
+                lines.forEach(l => { l.style.height = '15px'; l.classList.remove('active'); });
+                return;
+            }
+            lines.forEach(l => {
+                const h = Math.floor(Math.random() * 65) + 20;
+                l.style.height = h + 'px';
+                l.classList.add('active');
+            });
+            setTimeout(animateVoiceBox, 100);
         }
 
         function addLog(msg) {
